@@ -1,0 +1,40 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">                                                                                         
+<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta content="text/html;charset=UTF-8" http-equiv="Content-Type"/>
+  <title>WebJack</title>
+
+  <script src="../node_modules/jquery/dist/jquery.min.js"></script>
+  <script src="../dist/webjack.js" type="text/javascript"></script>
+  <link href="examples.css" rel="stylesheet">
+
+</head>
+<body>
+
+  <textarea class="webjack"></textarea>
+  <div class="webjack-log"></div>
+
+  <p> This example will graph the output of received data over time, using Chart.js</p>
+
+  <script>
+
+    var connection;
+
+    jQuery(document).ready(function($) {
+
+      connection = new WebJack.Connection();
+
+      connection.get(function(data) {
+
+        $('.webjack').append(data);
+
+      });
+
+      // connection.send('test');
+
+    });
+
+  </script>
+
+</body>
+</html>
