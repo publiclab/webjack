@@ -1,15 +1,23 @@
+'use strict';
+
 WebJack.Connection = Class.extend({
 
   init: function(args) {
 
     var connection = this;
+    var rxCallback;
 		var audioCtx = new AudioContext();
+		var encoder, decoder;
 
 		function onAudioProcess(event) {
 		  var buffer = event.inputBuffer;
 		  var samplesIn = buffer.getChannelData(0);
 		  console.log("-- audioprocess data (" + samplesIn.length + " samples) --");
-		  // TODO: decode
+
+		  if (!decoder){
+		  	decoder = new SoftModemDecoder(connection.args, rxCallback);
+		  }
+		  decoder.demod(samplesIn);
 		}
 
 		function successCallback(stream) {
@@ -45,7 +53,9 @@ WebJack.Connection = Class.extend({
 
 
     connection.get = function(data) {
-
+    	rxCallback = function(bytes){
+    			data(bytes);
+    	};
     }
 
 

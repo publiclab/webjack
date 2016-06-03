@@ -73,18 +73,45 @@ var WebJack = {};
   };
 })();
 
+'use strict';
+
+function SoftModemDecoder(baud, sampleRate, onReceived){
+	this.baud = baud;
+	this.sampleRate = sampleRate;
+	this.onReceived = onReceived;
+}
+
+SoftModemDecoder.prototype = {
+	baud = 1225,
+	sampleRate = 0,
+	onReceived = null,
+
+
+
+	demod : function(samples){
+		
+	}
+}
+'use strict';
+
 WebJack.Connection = Class.extend({
 
   init: function(args) {
 
     var connection = this;
+    var receivedData;
 		var audioCtx = new AudioContext();
+		var encoder, decoder;
 
 		function onAudioProcess(event) {
 		  var buffer = event.inputBuffer;
 		  var samplesIn = buffer.getChannelData(0);
 		  console.log("-- audioprocess data (" + samplesIn.length + " samples) --");
-		  // TODO: decode
+
+		  if (!decoder){
+		  	decoder = new SoftModemDecoder(connection.args, receivedData);
+		  }
+		  decoder.demod(samplesIn);
 		}
 
 		function successCallback(stream) {
@@ -120,7 +147,9 @@ WebJack.Connection = Class.extend({
 
 
     connection.get = function(data) {
-
+    	receivedData = function(bytes){
+    			data(bytes);
+    	};
     }
 
 
