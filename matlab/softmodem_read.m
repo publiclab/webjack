@@ -1,40 +1,38 @@
-function softmodem_read(filename, baudrate, eventlength)
-	FREQ_LOW = 1575;
-	FREQ_HIGH = 3150;
-	windowsize = 16;
-	
+function softmodem_read(filename, baudrate, freq_l, freq_h, eventlength)
+	[s, fs] = audioread(filename);
 	%% s → time domain
 	%% y → frequency domain
-
-	[s, fs] = audioread(filename);
 
 	%% normalization
 	s = s/max(s); 
 
+	%% window for correlation 
+	windowsize = 16;
+
 	data = [];
 
-	%% decode in chunks of length = eventlength
-	% m = ceil(length(s)/eventlength);
-	% l = m*eventlength;
-	% s = reshape(resize(s,l,1), eventlength, m);
+	if eventlength > 0
+		%% decode in chunks with length = eventlength
+		m = ceil(length(s)/eventlength);
+		l = m*eventlength;
+		s = reshape(resize(s,l,1), eventlength, m);
 
-	% state = 1;
-	% for n = 1 : 1 : columns(s)
-	% 	[corr_diff, corr_low, corr_high] = demod(s(:,n), fs, windowsize, FREQ_LOW, FREQ_HIGH, baudrate);
-	% 	[data, state] = decodeFrame(corr_diff, fs, data, state, baudrate);
-	% end
-
-	%% decode all at once
-	[corr_diff, corr_low, corr_high] = demod(s, fs, windowsize, FREQ_LOW, FREQ_HIGH, baudrate);
-	[data, state] = decodeAll(corr_diff, fs, baudrate);
+		state = 1;
+		for n = 1 : 1 : columns(s)
+			[corr_diff, corr_low, corr_high] = demod(s(:,n), fs, windowsize, freq_l, freq_h, baudrate);
+			[data, state] = decodeFrame(corr_diff, fs, data, state, baudrate);
+		end
+	else
+		%% decode all at once
+		[corr_diff, corr_low, corr_high] = demod(s, fs, windowsize, freq_l, freq_h, baudrate);
+		[data, state] = decodeAll(corr_diff, fs, baudrate);
+	end
 
 	%% result
 	disp(char(data));
 
 	%% plots
-	% fftplots(s, x_filt, fs);
 	plots(s, corr_low, corr_high, corr_diff);
-
 end
 
 
@@ -63,6 +61,7 @@ function [event,c_l,c_h] = demod(s, fs, windowsize, f_low, f_high, baud)
 	corr_diff /= max(corr_diff);
 
 	event = corr_diff;
+	% fftplots(s, s_filt, fs);
 end
 
 function [data, state] = decodeAll(s, fs, baud)
@@ -86,6 +85,7 @@ function [data, state] = decodeFrame(s, fs, partial_data, prev_state, baud)
 	flag_counter = 0;
 	c = 1;
 	byte = 0;
+
 	while c < length(s)
 		switch (state)
 			case FLAG
@@ -151,8 +151,10 @@ end
 
 function correlated = correlate(s, f, fs, windowsize)
 	correlated = zeros(size(s));
-	sinus = sin(2*pi*f*(0:1/fs:windowsize/fs)).';
-	cosinus = cos(2*pi*f*(0:1/fs:windowsize/fs)).';
+
+	phase = 2*pi * f * (0 : 1/fs : windowsize/fs);
+	sinus = sin(phase).';
+	cosinus = cos(phase).';
 
 	for c = 1:1:(length(s) - windowsize)
 		range = c : c+windowsize;
@@ -189,13 +191,13 @@ function plots(s, corr_l, corr_h, corr_diff)
 	
 	subplot(4,1,2)
 	plot(corr_l);
-	title(sprintf('Correlation with 1200 Hz'))
+	title(sprintf('Correlation with FREQ\\_LOW'))
 
 	subplot(4,1,3)
 	plot(corr_h);
-	title(sprintf('Correlation with 2200 Hz'))
+	title(sprintf('Correlation with FREQ\\_HIGH'))
 
 	subplot(4,1,4)
 	plot(corr_diff);
-	title(sprintf('Normalized difference of the correlated signals'))
+	title(sprintf('Demodulated signal'))
 end
