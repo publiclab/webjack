@@ -75,16 +75,16 @@ var WebJack = {};
 
 'use strict';
 
-function SoftModemDecoder(baud, sampleRate, onReceived){
+function SoftModemDecoder(baud, sampleRate, rxCallback){
 	this.baud = baud;
 	this.sampleRate = sampleRate;
-	this.onReceived = onReceived;
+	this.rxCallback = rxCallback;
 }
 
 SoftModemDecoder.prototype = {
-	baud = 1225,
-	sampleRate = 0,
-	onReceived = null,
+	baud : 1225,
+	sampleRate : 0,
+	rxCallback : null,
 
 
 
@@ -99,7 +99,7 @@ WebJack.Connection = Class.extend({
   init: function(args) {
 
     var connection = this;
-    var receivedData;
+    var rxCallback;
 		var audioCtx = new AudioContext();
 		var encoder, decoder;
 
@@ -109,7 +109,7 @@ WebJack.Connection = Class.extend({
 		  console.log("-- audioprocess data (" + samplesIn.length + " samples) --");
 
 		  if (!decoder){
-		  	decoder = new SoftModemDecoder(connection.args, receivedData);
+		  	decoder = new SoftModemDecoder(connection.args, rxCallback);
 		  }
 		  decoder.demod(samplesIn);
 		}
@@ -161,7 +161,7 @@ WebJack.Connection = Class.extend({
 
     // Sends request for a standard data packet
     connection.get = function(data) {
-    	receivedData = function(bytes){
+    	rxCallback = function(bytes){
     			data(bytes);
     	};
     }

@@ -7,9 +7,9 @@ function SoftModemDecoder(baud, sampleRate, rxCallback){
 }
 
 SoftModemDecoder.prototype = {
-	baud = 1225,
-	sampleRate = 0,
-	rxCallback = null,
+	baud : 1225,
+	sampleRate : 0,
+	rxCallback : null,
 
 
 
