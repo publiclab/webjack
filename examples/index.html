@@ -14,9 +14,15 @@
 
 </head>
 <body>
+  <h1>WebJack Demo</h1>
+  <a href="https://github.com/publiclab/webjack">WebJack</a> is a JavaScript library that uses an audio modem to communicate with an Arduino µC via headphone jack . No need to install anything.
 
-  <textarea class="webjack"></textarea>
-  <div class="webjack-log"></div>
+  <h2>Send a command</h2>
+  <textarea class="webjack" placeholder="E.g. enter 'help'"></textarea>
+  <button class="send">Send</button>
+
+  <h3>Received data:</h3>
+  <div class="webjack-log">></div>
 
   <script>
 
@@ -27,12 +33,17 @@
       connection = new WebJack.Connection();
 
       connection.get(function(data) {
-
-        $('.webjack').append(data);
-
+        var log = $('.webjack-log');
+        log.append(data);
+        log.append('<br> >');
+        console.log('Arduino to WebJack: ' + data);
       });
 
-      // connection.send('test');
+      $('.send').click(function () {
+        var text = $('.webjack').val();
+        connection.send(text);
+        console.log('WebJack to Arduino: ' + text);
+      });
 
     });
 
