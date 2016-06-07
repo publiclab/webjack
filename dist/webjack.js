@@ -1,10 +1,10 @@
 var WebJack = {};
 
-// (function(exports){
+(function(exports){
 
-//    exports = WebJack;
+  exports = WebJack;
 
-// })(typeof exports === 'undefined'? this={}: exports);
+})(typeof exports === 'undefined'? this['WebJack']={}: exports);
 
 /* From http://ejohn.org/blog/simple-javascript-inheritance/ */
 
