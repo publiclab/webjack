@@ -1,10 +1,10 @@
 var WebJack = {};
 
-(function(exports){
+// (function(exports){
 
-   exports = WebJack;
+//    exports = WebJack;
 
-})(typeof exports === 'undefined'? this={}: exports);
+// })(typeof exports === 'undefined'? this={}: exports);
 
 /* From http://ejohn.org/blog/simple-javascript-inheritance/ */
 
@@ -73,11 +73,75 @@ var WebJack = {};
   };
 })();
 
+'use strict';
+
+function SoftModemDecoder(baud, sampleRate, rxCallback){
+	this.baud = baud;
+	this.sampleRate = sampleRate;
+	this.rxCallback = rxCallback;
+}
+
+SoftModemDecoder.prototype = {
+	baud : 1225,
+	sampleRate : 0,
+	rxCallback : null,
+
+
+
+	demod : function(samples){
+		
+	}
+}
+'use strict';
+
 WebJack.Connection = Class.extend({
 
   init: function(args) {
 
     var connection = this;
+    var rxCallback;
+		var audioCtx = new AudioContext();
+		var encoder, decoder;
+
+		function onAudioProcess(event) {
+		  var buffer = event.inputBuffer;
+		  var samplesIn = buffer.getChannelData(0);
+		  console.log("-- audioprocess data (" + samplesIn.length + " samples) --");
+
+		  if (!decoder){
+		  	decoder = new SoftModemDecoder(connection.args, rxCallback);
+		  }
+		  decoder.demod(samplesIn);
+		}
+
+		function successCallback(stream) {
+		  var audioTracks = stream.getAudioTracks();
+		  console.log('Using audio device: ' + audioTracks[0].label);
+		  console.log("-- samplerate (" + audioCtx.sampleRate + ") --");
+		  stream.onended = function() {
+		    console.log('Stream ended');
+		  };
+		  audioSource = audioCtx.createMediaStreamSource(stream);
+		  decoderNode = audioCtx.createScriptProcessor(8192, 1, 1); // buffersize, input channels, output channels
+		  audioSource.connect(decoderNode);
+		  decoderNode.addEventListener("audioprocess", onAudioProcess);
+		  decoderNode.connect(audioCtx.destination); // Chrome does not fire events without destination 
+		}
+
+		function errorCallback(error) {
+		  console.log('navigator.getUserMedia error: ', error);
+		}
+
+		navigator.mediaDevices.getUserMedia(
+			{
+			  audio: true,
+			  video: false
+			}
+		).then(
+		  successCallback,
+		  errorCallback
+		);
+
 
     connection.args = args; // connection.args.baud_rate, etc
 
@@ -97,7 +161,9 @@ WebJack.Connection = Class.extend({
 
     // Sends request for a standard data packet
     connection.get = function(data) {
-
+    	rxCallback = function(bytes){
+    			data(bytes);
+    	};
     }
 
 
