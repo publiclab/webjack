@@ -58,7 +58,7 @@ To understand the decoding process, let's first exlpain how data is encoded by S
 
 Now let's see how we can decode the demodulated signal. The decoder is build as a finite state machine with the states __PREAMBLE__, __START__, __DATA__, __STOP__. Initially it is in the state PREAMBLE. In this state the decoder trys to find the preamble by counting the samples that are larger than a certain threshold. If a preamble was detected, the decoder jumps to the middle of the Start bit and goes into the START state. There the decoder evaluates if the Start bit is set or if it jumped into the START state by mistake. In case the Start bit is set, the decoder jumps ahead for the number of samples per bit. Now the decoder position should be in the middle of the first Data bit and in state DATA. In this position it evaluates the first Data bit and consecutively the following 7 bits. Afterwards, the decoder goes into the state STOP and checks if the Stop bit was set correctly. Following, the decoder checks the Push bit. If the Push bit is set, transmission is over and we go to the PREAMBLE state. Else the next state is DATA, as a missing Push bit is the equivalent of a Start bit and indicates that the sender will continue transmitting data.
 
-In the next picture we see the positions, where the demodulated signal will evaluated by the decoder.
+In the next picture we see the positions (red lines), where the demodulated signal will evaluated by the decoder.
 
 ![decoder](figures/figure_eval_pos.png)
 
