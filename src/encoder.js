@@ -5,11 +5,13 @@ WebJack.Encoder = Class.extend({
 		var encoder = this;
 
 		var sampleRate = args.sampleRate;
+		console.log("samplerate: "+ sampleRate);
 		var baud = args.baud;
 		var freqLow = 4900;
 		var freqHigh = 7350;
 
-		var samplesPerBit = sampleRate/baud;
+		var samplesPerBit = Math.ceil(sampleRate/baud);
+		console.log("spb: "+ samplesPerBit);
 		var preambleLength = Math.ceil(sampleRate*40/1000/samplesPerBit);
 		var pushbitLength =  Math.ceil(sampleRate*5/1000/samplesPerBit);
 
