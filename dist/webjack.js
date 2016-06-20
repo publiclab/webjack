@@ -79,14 +79,21 @@ WebJack.Encoder = Class.extend({
 
 		var encoder = this;
 
-		var sampleRate = args.sampleRate;
-		console.log("samplerate: "+ sampleRate);
+		var targetSampleRate = args.sampleRate;
+		var sampleRate = 44100;
+		console.log("target samplerate: "+ targetSampleRate);
 		var baud = args.baud;
 		var freqLow = 4900;
 		var freqHigh = 7350;
 
 		var samplesPerBit = Math.ceil(sampleRate/baud);
-		console.log("spb: "+ samplesPerBit);
+		var samplesPeriodLow = Math.ceil(sampleRate/freqLow)
+		var samplesPeriodHigh = Math.ceil(sampleRate/freqHigh)
+		// var periodsLowBit = Math.floor(samplesPerBit/samplesPeriodLow);
+		// var periodsHighBit = Math.floor(samplesPerBit/samplesPeriodHigh);
+		// console.log("spb: "+ samplesPerBit);
+		// console.log("periods low: "+ periodsLowBit);
+		// console.log("periods high: "+ samplesPeriodHigh);
 		var preambleLength = Math.ceil(sampleRate*40/1000/samplesPerBit);
 		var pushbitLength =  Math.ceil(sampleRate*5/1000/samplesPerBit);
 
@@ -148,9 +155,271 @@ WebJack.Encoder = Class.extend({
 			}
 			pushBits(1, pushbitLength);
 
-			return samples;
+			console.log("gen. audio length: " +samples.length);
+			var resampler = new Resampler(sampleRate, targetSampleRate, 1, samples);
+			var resampled = resampler.resampler(samples.length);
+			// console.log(resampler.outputBuffer);
+			console.log("resampled audio length: " + resampler.outputBuffer.length);
+			// console.log(samples);
+
+			return resampler.outputBuffer;
 		}
 	}
+});
+
+// TODO move the following code into separate file
+
+//JavaScript Audio Resampler
+//Copyright (C) 2011-2015 Grant Galitz
+//Released to Public Domain
+function Resampler(fromSampleRate, toSampleRate, channels, inputBuffer) {
+    //Input Sample Rate:
+    this.fromSampleRate = +fromSampleRate;
+    //Output Sample Rate:
+    this.toSampleRate = +toSampleRate;
+    //Number of channels:
+    this.channels = channels | 0;
+    //Type checking the input buffer:
+    if (typeof inputBuffer != "object") {
+        throw(new Error("inputBuffer is not an object."));
+    }
+    if (!(inputBuffer instanceof Array) && !(inputBuffer instanceof Float32Array) && !(inputBuffer instanceof Float64Array)) {
+        throw(new Error("inputBuffer is not an array or a float32 or a float64 array."));
+    }
+    this.inputBuffer = inputBuffer;
+    //Initialize the resampler:
+    this.initialize();
+}
+Resampler.prototype.initialize = function () {
+	//Perform some checks:
+	if (this.fromSampleRate > 0 && this.toSampleRate > 0 && this.channels > 0) {
+		if (this.fromSampleRate == this.toSampleRate) {
+			//Setup a resampler bypass:
+			this.resampler = this.bypassResampler;		//Resampler just returns what was passed through.
+            this.ratioWeight = 1;
+            this.outputBuffer = this.inputBuffer;
+		}
+		else {
+            this.ratioWeight = this.fromSampleRate / this.toSampleRate;
+			if (this.fromSampleRate < this.toSampleRate) {
+				/*
+					Use generic linear interpolation if upsampling,
+					as linear interpolation produces a gradient that we want
+					and works fine with two input sample points per output in this case.
+				*/
+				this.resampler = this.linearInterpolationFunction;
+				this.lastWeight = 1;
+			}
+			else {
+				/*
+					Custom resampler I wrote that doesn't skip samples
+					like standard linear interpolation in high downsampling.
+					This is more accurate than linear interpolation on downsampling.
+				*/
+				this.compileMultiTapFunction();
+				this.tailExists = false;
+				this.lastWeight = 0;
+			}
+			this.initializeBuffers();
+		}
+	}
+	else {
+		throw(new Error("Invalid settings specified for the resampler."));
+	}
+}
+Resampler.prototype.linearInterpolationFunction = function (bufferLength) {
+	var outputOffset = 0;
+    if (bufferLength > 0) {
+        var buffer = this.inputBuffer;
+        var weight = this.lastWeight;
+        var firstWeight = 0;
+        var secondWeight = 0;
+        var sourceOffset = 0;
+        var outputOffset = 0;
+        var outputBuffer = this.outputBuffer;
+        // for (; weight < 1; weight += this.ratioWeight) {
+        //     secondWeight = weight % 1;
+        //     firstWeight = 1 - secondWeight;
+        //     outputBuffer[outputOffset++] = (this.lastOutput[0] * firstWeight) 
+        //     + (buffer[0] * secondWeight); 
+        // }
+        weight -= 1;
+        for (bufferLength -= 1, sourceOffset = Math.floor(weight); sourceOffset < bufferLength;) {
+            secondWeight = weight % 1;
+            firstWeight = 1 - secondWeight; 
+            outputBuffer[outputOffset++] = (buffer[sourceOffset] * firstWeight)
+             + (buffer[sourceOffset + 1] * secondWeight); 
+            weight += this.ratioWeight;
+            sourceOffset = Math.floor(weight);
+        } 
+        this.lastOutput[0] = buffer[sourceOffset++]; 
+        this.lastWeight = weight % 1;
+    }
+    return outputOffset;
+}
+Resampler.prototype.compileMultiTapFunction = function () {
+	var toCompile = "var outputOffset = 0;\
+    if (bufferLength > 0) {\
+        var buffer = this.inputBuffer;\
+        var weight = 0;";
+        for (var channel = 0; channel < this.channels; ++channel) {
+            toCompile += "var output" + channel + " = 0;"
+        }
+        toCompile += "var actualPosition = 0;\
+        var amountToNext = 0;\
+        var alreadyProcessedTail = !this.tailExists;\
+        this.tailExists = false;\
+        var outputBuffer = this.outputBuffer;\
+        var currentPosition = 0;\
+        do {\
+            if (alreadyProcessedTail) {\
+                weight = " + this.ratioWeight + ";";
+                for (channel = 0; channel < this.channels; ++channel) {
+                    toCompile += "output" + channel + " = 0;"
+                }
+            toCompile += "}\
+            else {\
+                weight = this.lastWeight;";
+                for (channel = 0; channel < this.channels; ++channel) {
+                    toCompile += "output" + channel + " = this.lastOutput[" + channel + "];"
+                }
+                toCompile += "alreadyProcessedTail = true;\
+            }\
+            while (weight > 0 && actualPosition < bufferLength) {\
+                amountToNext = 1 + actualPosition - currentPosition;\
+                if (weight >= amountToNext) {";
+                    for (channel = 0; channel < this.channels; ++channel) {
+                        toCompile += "output" + channel + " += buffer[actualPosition++] * amountToNext;"
+                    }
+                    toCompile += "currentPosition = actualPosition;\
+                    weight -= amountToNext;\
+                }\
+                else {";
+                    for (channel = 0; channel < this.channels; ++channel) {
+                        toCompile += "output" + channel + " += buffer[actualPosition" + ((channel > 0) ? (" + " + channel) : "") + "] * weight;"
+                    }
+                    toCompile += "currentPosition += weight;\
+                    weight = 0;\
+                    break;\
+                }\
+            }\
+            if (weight <= 0) {";
+                for (channel = 0; channel < this.channels; ++channel) {
+                    toCompile += "outputBuffer[outputOffset++] = output" + channel + " / " + this.ratioWeight + ";"
+                }
+            toCompile += "}\
+            else {\
+                this.lastWeight = weight;";
+                for (channel = 0; channel < this.channels; ++channel) {
+                    toCompile += "this.lastOutput[" + channel + "] = output" + channel + ";"
+                }
+                toCompile += "this.tailExists = true;\
+                break;\
+            }\
+        } while (actualPosition < bufferLength);\
+    }\
+    return outputOffset;";
+	this.resampler = Function("bufferLength", toCompile);
+}
+Resampler.prototype.bypassResampler = function (upTo) {
+    return upTo;
+}
+Resampler.prototype.initializeBuffers = function () {
+	//Initialize the internal buffer:
+    var outputBufferSize = (Math.ceil(this.inputBuffer.length * this.toSampleRate / this.fromSampleRate / this.channels * 1.000000476837158203125) * this.channels) + this.channels;
+	try {
+		this.outputBuffer = new Float32Array(outputBufferSize);
+		this.lastOutput = new Float32Array(this.channels);
+	}
+	catch (error) {
+		this.outputBuffer = [];
+		this.lastOutput = [];
+	}
+}
+
+// TODO: not finished refactoring yet
+
+WebJack.Resampler = Class.extend({
+
+    init: function(args) {
+
+        var resampler = this;
+
+        var fromSampleRate = +args.inRate;
+        var toSampleRate = +args.outRate;
+        var inputBuffer = args.inputBuffer;
+        var outputBuffer;
+
+        if (typeof inputBuffer != "object") {
+            throw(new Error("inputBuffer is not an object."));
+        }
+        if (!(inputBuffer instanceof Array) 
+            && !(inputBuffer instanceof Float32Array) 
+            && !(inputBuffer instanceof Float64Array)) {
+            throw(new Error("inputBuffer is not an array or a float32 or a float64 array."));
+        }
+        
+        if (fromSampleRate > 0 && toSampleRate > 0) {
+            if (fromSampleRate == toSampleRate) {
+                this.resample = bypassResampler;        //Resampler just returns what was passed through.
+                ratioWeight = 1;
+                outputBuffer = inputBuffer;
+            }
+            else {
+                initializeBuffers();
+                ratioWeight = fromSampleRate / toSampleRate;
+                if (fromSampleRate < toSampleRate) {
+                    this.resample = linearInterpolationFunction;
+                    lastWeight = 1;
+                }
+    		}
+    	}
+    	else {
+    		throw(new Error("Invalid settings specified for the resampler."));
+    	}
+        
+        function linearInterpolationFunction(bufferLength) {
+        	var outputOffset = 0;
+            if (bufferLength > 0) {
+                var buffer = inputBuffer;
+                var weight = lastWeight;
+                var firstWeight = 0;
+                var secondWeight = 0;
+                var sourceOffset = 0;
+                var outputOffset = 0;
+                // var outputBuffer = this.outputBuffer;
+
+                weight -= 1;
+                for (bufferLength -= 1, sourceOffset = Math.floor(weight); sourceOffset < bufferLength;) {
+                    secondWeight = weight % 1;
+                    firstWeight = 1 - secondWeight; 
+                    outputBuffer[outputOffset++] = (buffer[sourceOffset] * firstWeight)
+                     + (buffer[sourceOffset + 1] * secondWeight); 
+                    weight += ratioWeight;
+                    sourceOffset = Math.floor(weight);
+                } 
+                lastOutput[0] = buffer[sourceOffset++]; 
+                lastWeight = weight % 1;
+            }
+            return outputOffset;
+        }
+
+        function bypassResampler(upTo) {
+            return upTo;
+        }
+        
+        function initializeBuffers() {
+            var outputBufferSize = Math.ceil(inputBuffer.length * toSampleRate / fromSampleRate / 1.000000476837158203125) + 1;
+        	try {
+        		outputBuffer = new Float32Array(outputBufferSize);
+        		lastOutput = new Float32Array(1);
+        	}
+        	catch (error) {
+        		outputBuffer = [];
+        		lastOutput = [];
+        	}
+        }
+    }
 });
 'use strict';
 
