@@ -1,5 +1,6 @@
-
-// TODO: not finished refactoring yet
+//JavaScript Audio Resampler by Grant Galitz
+// from https://github.com/taisel/XAudioJS/blob/master/resampler.js
+// modified for 1-channel upsampling (or bypass) only
 
 WebJack.Resampler = Class.extend({
 
@@ -11,6 +12,8 @@ WebJack.Resampler = Class.extend({
         var toSampleRate = +args.outRate;
         var inputBuffer = args.inputBuffer;
         var outputBuffer;
+        var ratioWeight, lastWeight, lastOutput;
+        var resampleFunction;
 
         if (typeof inputBuffer != "object") {
             throw(new Error("inputBuffer is not an object."));
@@ -23,44 +26,43 @@ WebJack.Resampler = Class.extend({
         
         if (fromSampleRate > 0 && toSampleRate > 0) {
             if (fromSampleRate == toSampleRate) {
-                this.resample = bypassResampler;        //Resampler just returns what was passed through.
+                resampleFunction = bypassResampler;        //Resampler just returns what was passed through.
                 ratioWeight = 1;
                 outputBuffer = inputBuffer;
             }
             else {
                 initializeBuffers();
+                console.log("yep : " + outputBuffer.length);
                 ratioWeight = fromSampleRate / toSampleRate;
                 if (fromSampleRate < toSampleRate) {
-                    this.resample = linearInterpolationFunction;
+                    resampleFunction = linearInterpolationFunction;
                     lastWeight = 1;
                 }
-    		}
-    	}
-    	else {
-    		throw(new Error("Invalid settings specified for the resampler."));
-    	}
+            }
+        }
+        else {
+            throw(new Error("Invalid settings specified for the resampler."));
+        }
         
         function linearInterpolationFunction(bufferLength) {
-        	var outputOffset = 0;
+            var outputOffset = 0;
             if (bufferLength > 0) {
-                var buffer = inputBuffer;
                 var weight = lastWeight;
                 var firstWeight = 0;
                 var secondWeight = 0;
                 var sourceOffset = 0;
                 var outputOffset = 0;
-                // var outputBuffer = this.outputBuffer;
 
                 weight -= 1;
                 for (bufferLength -= 1, sourceOffset = Math.floor(weight); sourceOffset < bufferLength;) {
                     secondWeight = weight % 1;
                     firstWeight = 1 - secondWeight; 
-                    outputBuffer[outputOffset++] = (buffer[sourceOffset] * firstWeight)
-                     + (buffer[sourceOffset + 1] * secondWeight); 
+                    outputBuffer[outputOffset++] = (inputBuffer[sourceOffset] * firstWeight)
+                     + (inputBuffer[sourceOffset + 1] * secondWeight); 
                     weight += ratioWeight;
                     sourceOffset = Math.floor(weight);
                 } 
-                lastOutput[0] = buffer[sourceOffset++]; 
+                lastOutput[0] = inputBuffer[sourceOffset++]; 
                 lastWeight = weight % 1;
             }
             return outputOffset;
@@ -80,6 +82,14 @@ WebJack.Resampler = Class.extend({
         		outputBuffer = [];
         		lastOutput = [];
         	}
+        }
+
+        resampler.resample = function(bufferLength){
+            return resampleFunction(bufferLength);
+        }
+
+        resampler.outputBuffer = function(){
+            return outputBuffer;
         }
     }
 });
