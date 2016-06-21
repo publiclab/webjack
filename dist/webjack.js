@@ -170,7 +170,7 @@ WebJack.Encoder = Class.extend({
 });
 //JavaScript Audio Resampler by Grant Galitz
 // from https://github.com/taisel/XAudioJS/blob/master/resampler.js
-// modified for 1-channel upsampling (or bypass) only
+// simplified for single channel usage
 
 WebJack.Resampler = Class.extend({
 
@@ -182,7 +182,7 @@ WebJack.Resampler = Class.extend({
         var toSampleRate = +args.outRate;
         var inputBuffer = args.inputBuffer;
         var outputBuffer;
-        var ratioWeight, lastWeight, lastOutput;
+        var ratioWeight, lastWeight, lastOutput, tailExists;
         var resampleFunction;
 
         if (typeof inputBuffer != "object") {
@@ -202,11 +202,15 @@ WebJack.Resampler = Class.extend({
             }
             else {
                 initializeBuffers();
-                console.log("yep : " + outputBuffer.length);
                 ratioWeight = fromSampleRate / toSampleRate;
                 if (fromSampleRate < toSampleRate) {
                     resampleFunction = linearInterpolationFunction;
                     lastWeight = 1;
+                }
+                else {
+                    resampleFunction = compileMultiTapFunction;
+                    tailExists = false;
+                    lastWeight = 0;
                 }
             }
         }
@@ -234,6 +238,54 @@ WebJack.Resampler = Class.extend({
                 } 
                 lastOutput[0] = inputBuffer[sourceOffset++]; 
                 lastWeight = weight % 1;
+            }
+            return outputOffset;
+        }
+
+        function compileMultiTapFunction() {
+            var outputOffset = 0;
+            if (bufferLength > 0) {
+                var weight = 0; 
+                var output0 = 0; 
+                var actualPosition = 0;
+                var amountToNext = 0;
+                var alreadyProcessedTail = !tailExists;
+                tailExists = false;
+                var currentPosition = 0;
+                do {
+                    if (alreadyProcessedTail) {
+                        weight = ratioWeight;
+                            output0 = 0;
+                    }
+                    else {
+                        weight = lastWeight;
+                        output0 = lastOutput[0];
+                        alreadyProcessedTail = true;
+                    }
+                    while (weight > 0 && actualPosition < bufferLength) {
+                        amountToNext = 1 + actualPosition - currentPosition;
+                        if (weight >= amountToNext) {
+                            output0 += inputBuffer[actualPosition++] * amountToNext;
+                            currentPosition = actualPosition;
+                            weight -= amountToNext;
+                        }
+                        else {
+                            output0 += inputBuffer[actualPosition] * weight;
+                            currentPosition += weight;
+                            weight = 0;
+                            break;
+                        }
+                    }
+                    if (weight <= 0) {
+                        outputBuffer[outputOffset++] = output0 / ratioWeight;
+                    }
+                    else {
+                        lastWeight = weight;
+                        lastOutput[0] = output0;
+                        tailExists = true;
+                        break;
+                    }
+                } while (actualPosition < bufferLength);
             }
             return outputOffset;
         }
