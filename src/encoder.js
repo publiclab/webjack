@@ -4,12 +4,22 @@ WebJack.Encoder = Class.extend({
 
 		var encoder = this;
 
-		var sampleRate = args.sampleRate;
+		var targetSampleRate = args.sampleRate;
+		var sampleRate = 44100;
+		console.log("target sample rate: " + targetSampleRate);
 		var baud = args.baud;
 		var freqLow = 4900;
 		var freqHigh = 7350;
 
-		var samplesPerBit = sampleRate/baud;
+		var samplesPerBit = Math.ceil(sampleRate/baud);
+		var samplesPeriodLow = Math.ceil(sampleRate/freqLow)
+		var samplesPeriodHigh = Math.ceil(sampleRate/freqHigh)
+		// var periodsLowBit = Math.floor(samplesPerBit/samplesPeriodLow);
+		// var periodsHighBit = Math.floor(samplesPerBit/samplesPeriodHigh);
+		// console.log("spb: "+ samplesPerBit);
+		// console.log("periods low: "+ periodsLowBit);
+		// console.log("periods high: "+ samplesPeriodHigh);
+
 		var preambleLength = Math.ceil(sampleRate*40/1000/samplesPerBit);
 		var pushbitLength =  Math.ceil(sampleRate*5/1000/samplesPerBit);
 
@@ -71,7 +81,15 @@ WebJack.Encoder = Class.extend({
 			}
 			pushBits(1, pushbitLength);
 
-			return samples;
+			console.log("gen. audio length: " +samples.length);
+			var resampler = new WebJack.Resampler({inRate: sampleRate, outRate: targetSampleRate, inputBuffer: samples});
+			resampler.resample(samples.length);
+			var resampled = resampler.outputBuffer();
+			// console.log(samples);
+			console.log("resampled audio length: " + resampled.length);
+			// console.log(resampled);
+
+			return resampled;
 		}
 	}
 });
