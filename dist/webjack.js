@@ -2,7 +2,10 @@ var WebJack = {};
 
 (function(exports){
 
-  module.exports = WebJack;
+  if (typeof module === 'undefined')
+    exports = WebJack;
+  else 
+    module.exports = WebJack;
 
 })(typeof exports === 'undefined'? this['WebJack']={}: exports);
 
@@ -353,7 +356,7 @@ WebJack.Connection = Class.extend({
 
     var connection = this;
 
-	var audioCtx = new AudioContext();
+	var audioCtx = args.audioCtx || new AudioContext();
 	var sampleRate = audioCtx.sampleRate;
 	var baud = args.baud;
 
@@ -390,6 +393,7 @@ WebJack.Connection = Class.extend({
 	  console.log('navigator.getUserMedia error: ', error);
 	}
 
+	navigator = args.navigator || navigator;
 	navigator.mediaDevices.getUserMedia(
 		{
 		  audio: true,
