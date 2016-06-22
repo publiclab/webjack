@@ -24,13 +24,15 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "matchdep":                 "^0.3.0",
-    "grunt":                    "^1.0.1",
-    "grunt-cli":                "^1.2.0",
-    "grunt-contrib-concat":     "^0.5.0",
-    "grunt-contrib-watch":      "^1.0.0",
-    "grunt-wiredep":            "^3.0.1",
-    "tape":                     "^3.5.0"
+    "grunt": "^1.0.1",
+    "grunt-cli": "^1.2.0",
+    "grunt-contrib-concat": "^0.5.0",
+    "grunt-contrib-watch": "^1.0.0",
+    "grunt-wiredep": "^3.0.1",
+    "matchdep": "^0.3.0",
+    "sinon": "^1.17.4",
+    "tape": "^3.5.0",
+    "wav-decoder": "^1.1.0"
   },
   "homepage": "https://github.com/publiclab/webjack#readme"
 }

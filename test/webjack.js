@@ -2,7 +2,7 @@
 
 var fs = require('fs');
 var test = require('tape');
-var webjacek = require('..');
+var webjack = require('../dist/webjack');
 
 function read (file) {
   return fs.readFileSync('./test/fixtures/' + file, 'utf8').trim();

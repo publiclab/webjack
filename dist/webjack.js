@@ -2,7 +2,7 @@ var WebJack = {};
 
 (function(exports){
 
-  exports = WebJack;
+  module.exports = WebJack;
 
 })(typeof exports === 'undefined'? this['WebJack']={}: exports);
 
@@ -73,6 +73,17 @@ var WebJack = {};
   };
 })();
 
+WebJack.Decoder = Class.extend({
+
+	init: function(args) {
+
+		var decoder = this;
+
+		decoder.decode = function(samples){
+			
+		}
+	}
+});
 WebJack.Encoder = Class.extend({
 
 	init: function(args) {
