@@ -20,9 +20,9 @@ WebJack.Connection = Class.extend({
 	  console.log("-- audioprocess data (" + samplesIn.length + " samples) --");
 
 	  if (!decoder){
-	  	decoder = new SoftModemDecoder(connection.args, rxCallback);
+	  	decoder = new WebJack.Decoder({ baud: args.baud, sampleRate: sampleRate, onReceive: rxCallback});
 	  }
-	  decoder.demod(samplesIn);
+	  decoder.decode(samplesIn);
 	}
 
 	function successCallback(stream) {
