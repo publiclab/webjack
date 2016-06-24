@@ -4,7 +4,7 @@ WebJack.Decoder = Class.extend({
 
 		var decoder = this;
 
-		var DEBUG = true;
+		var DEBUG = false;
 		var onReceive = args.onReceive;
 
 		var sampleRate = args.sampleRate;
@@ -15,6 +15,7 @@ WebJack.Decoder = Class.extend({
 		var samplesPerBit = Math.ceil(sampleRate/baud);
 		var preambleLength = Math.ceil(sampleRate*40/1000/samplesPerBit);
 		var pushbitLength =  Math.ceil(sampleRate*5/1000/samplesPerBit);
+		var minPreamble = 11 * samplesPerBit; //8 data bits + stop bit + push bit should not be detected as preamble -> min preamble = 11 bit length 
 
 		var state = {
 			current : 0,
@@ -23,11 +24,13 @@ WebJack.Decoder = Class.extend({
 			DATA : 3,
 			STOP : 4,
 
-			bitBuffer : new Uint8Array(1),
-			byteBuffer: "",
+			bitBuffer : 0,
+			byteBuffer : "",
 			bitCounter : 0,
-			flagCounter: 0,
-
+			flagCounter : 0,
+			lastTransition : 0,
+			lastBitState : 0,
+			t : 0 // sample counter, no reset currently -> will overflow
 		}
 		var cLowReal = new Float32Array(samplesPerBit);
 		var cLowImag = new Float32Array(samplesPerBit);
@@ -70,7 +73,10 @@ WebJack.Decoder = Class.extend({
 		}
 
 		function demod(samples){
+			var symbols = [];
 			var cLow, cHigh;
+
+			normalize(samples);
 
 			for(var i=0, s=0; i < samples.length; i++, s++){
 				cLowReal[s] = samples[i] * cosinusLow[s];
@@ -85,88 +91,111 @@ WebJack.Decoder = Class.extend({
 				if (s == samplesPerBit)
 					s = 0;
 			}
+			for(var i=1; i < samples.length; i++){
+				if ((samples[i] * samples[i-1] < 0) || (samples[i-1] == 0)){
+					var bits = Math.round((state.t - state.lastTransition)/ samplesPerBit);
+					state.lastTransition = state.t;
+					symbols.push(bits);
+				}
+				state.t++;
+			}
+			state.t++;
+			return symbols;
 		}
 
+		function addBitNTimes(bit, n) {
+			if (state.bitCounter + n > 8)
+				throw 'bitBuffer too small';
+			for (var b=0; b < n; b++){
+				state.bitCounter++;
+				state.bitBuffer >>= 1;
+				if (bit)
+					state.bitBuffer += 128;
+				if (state.bitCounter == 8) {
+					state.byteBuffer += String.fromCharCode(state.bitBuffer);
+					state.bitBuffer = 0;
+					state.bitCounter = 0;
+				}
+			}
+		}
 
 		decoder.decode = function(samples){
 			// var a = performance.now();
 
-			normalize(samples);
-			demod(samples);
-			normalize(samples);
+			var bitlengths = demod(samples);
 
 			var nextState = state.PREAMBLE;
-			var bitcount = state.bitCounter;
-			var flagcount = state.flagCounter;
-			var bitBuffer = state.bitBuffer;
-			var byteBuffer = state.byteBuffer;
-			var bit = 0;
 
-			var c = 0;
-			while (c < samples.length) {
-				switch (state){
+			for(var i=0; i < bitlengths.length ; i++) {
+				var symbols = bitlengths[i];
+				switch (state.current){
 
 					case state.PREAMBLE:
-						if (samples[c] > 0.5)
-							flagcount++;
-						else if (flagcount > preambleLength*0.8)
-							flagcount = 0;
-						else {	
+						if (symbols >= 11 && symbols <= 49)
 							nextState = state.START;
-							flagcount = 0;
-							c += Math.floor(samplesPerBit/2) - 1;
-						}
 						break;
 
 					case state.START:
-						if (DEBUG) console.log(c + ' START');
-						if (samples[c] > 0)
-							nextState = state.PREAMBLE;
-						else {
+						if (DEBUG) console.log('START');
+						if (symbols == 1)
 							nextState = state.DATA;
-							bitBuffer[0] = 0;
-							c += samplesPerBit - 1;
+						else if (symbols > 1 && symbols <= 9){
+							nextState = symbols == 9 ? state.STOP : state.DATA;
+							addBitNTimes(0, symbols -1);
+						} 
+						else {
+							nextState = state.PREAMBLE;
+							state.bitBuffer = 0;
 						}
 						break;
 
 					case state.DATA:
-						if (DEBUG) console.log(c + ' DATA');
-						bit = samples[c] > 0 ? 1 : 0;
-						bitBuffer[0] = (bitBuffer[0] || bit >>> bitcount);
-						if (bitcount < 7)
-							bitcount++;
-						else {
-							bitcount = 0;
-							nextState = state.STOP;
-						}
-						c += samplesPerBit - 1;
-						break;
+						if (DEBUG) console.log('DATA');
+						var bits_total = symbols + state.bitCounter;
+				        var bit = state.lastBitState ^ 1;
+				        state.lastBitState = bit;
+
+
+				        if (bits_total > 10) {
+			          		nextState = state.PREAMBLE;
+				        } else if (bits_total == 10) { // all bits high, stop bit, push bit
+				        	addBitNTimes(1, 8);
+			          		nextState = state.PREAMBLE;
+			          		onReceive(state.byteBuffer);
+			          		state.byteBuffer = '';
+				        } else if (bits_total == 9) { // all bits high, stop bit, no push bit
+				            addBitNTimes(1, 8);
+				            nextState = state.START;
+				        } else if (bits_total == 8) {
+				            addBitNTimes(bit, symbols);
+				            nextState = state.STOP;
+				        } else {
+				            addBitNTimes(bit, symbols);
+				        } 
+				        break;
 
 					case state.STOP:
-						if (DEBUG) console.log(c + ' STOP');
-						if (samples[c] > 0) {
-							byteBuffer += String.fromCharCode(bitBuffer[0]);
-							onReceive(byteBuffer);
-							byteBuffer = "";
+						if (DEBUG) console.log('STOP');
+						if (symbols == 1) {
 							nextState = state.START;
-						}
-						else{	
+						} else if (symbols >= 2) {	
 							nextState = state.PREAMBLE;
-						}
-						c += samplesPerBit - 1;
+							onReceive(state.byteBuffer);
+							state.byteBuffer = '';
+						} else
+							nextState = state.PREAMBLE;
+
 						break;
 
 					default:
 						nextState = state.PREAMBLE;
-						flagcount = 0;
-						bitcount = 0;
-						bitBuffer[0] = 0;
+						state.bitCounter = 0;
+						state.bitBuffer = 0;
 				}
-			c++;
 			state.current = nextState;
 			}
 
-			// if (DEBUG) console.log('audio event decode time: ' + Math.round(performance.now()-a) + " ms");
+			// console.log('audio event decode time: ' + Math.round(performance.now()-a) + " ms");
 		}
 	}
 });
