@@ -40,13 +40,13 @@ test('decoder decodes single transmission', function (t) {
 });
 
 test.skip('decoder decodes repeated transmissions (with spaces inbetween)', function (t) {
-	testNTransmissions(t, "10xSoftModem_spaces.wav", 10);
+	return testNTransmissions(t, "10xSoftModem_spaces.wav", 10);
 });
 
 test.skip('decoder decodes repeated transmission (without spaces)', function (t) {
-	testNTransmissions(t, "10xSoftModem.wav", 10);
+	return testNTransmissions(t, "10xSoftModem.wav", 10);
 });
 
 test.skip('decoder handles broken transmissions correctly', function (t) {
-	testNTransmissions(t, "broken_one.wav", 6);
+	return testNTransmissions(t, "broken_one.wav", 6);
 });
