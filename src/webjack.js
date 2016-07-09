@@ -6,7 +6,7 @@ WebJack.Connection = Class.extend({
 
     var connection = this;
 
-	var audioCtx = new AudioContext();
+	var audioCtx = args.audioCtx || new AudioContext();
 	var sampleRate = audioCtx.sampleRate;
 	var baud = args.baud;
 
@@ -43,6 +43,7 @@ WebJack.Connection = Class.extend({
 	  console.log('navigator.getUserMedia error: ', error);
 	}
 
+	navigator = args.navigator || navigator;
 	navigator.mediaDevices.getUserMedia(
 		{
 		  audio: true,
