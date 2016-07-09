@@ -19,7 +19,7 @@ const readFile = (filepath) => {
 };
 
 
-function testNTransmissions(t, file, numOfTransmissions){
+function testNTransmissions(t, file, numOfTransmissions, content){
 	var sampleRate = 44100;
 	var callback = sinon.spy();
 	var decoder = new webjack.Decoder({sampleRate: sampleRate, baud: 1225, onReceive: callback});
@@ -31,22 +31,32 @@ function testNTransmissions(t, file, numOfTransmissions){
 			decoder.decode(samples);
 			t.equal(fileSampleRate, sampleRate, 'sample rates fit');
 			t.equal(callback.callCount, numOfTransmissions, "num of detected transmissions");
-			t.equal(callback.alwaysCalledWithExactly("SoftModem"), true, "decoded content correctly");
+			if (content != undefined)
+				t.equal(callback.alwaysCalledWithExactly(content), true, "decoded content correctly");
+			console.log(callback.printf('%C'));
 	});
 }
 
-test('decoder decodes single transmission', function (t) {
-	return testNTransmissions(t, "SoftModem.wav", 1);
+test('decoder decodes (multiple) SoftModem signals, with spaces inbetween', function (t) {
+	return testNTransmissions(t, "15xWebJack_with_spaces.wav", 15, 'WebJack');
 });
 
-test('decoder decodes repeated transmissions (with spaces inbetween)', function (t) {
-	return testNTransmissions(t, "10xSoftModem_space.wav", 10);
+test('decoder decodes signals without spaces inbetween', function (t) {
+	return testNTransmissions(t, "10xWebJack.wav", 10, 'WebJack');
 });
 
-test.skip('decoder decodes repeated transmission (without spaces)', function (t) {
-	return testNTransmissions(t, "10xSoftModem.wav", 10);
+test('decodes decodes recording from Nexus5', function (t) {
+	return testNTransmissions(t, "15xWebJack_Nexus5.wav", 1, 'WebJack');
+});
+
+test('decodes decodes recording from Razr i', function (t) {
+	return testNTransmissions(t, "15xWebJack_razri.wav", 1, 'WebJack');
+});
+
+test('decodes decodes much words, such sentence', function (t) {
+	return testNTransmissions(t, "much_words.wav", 1, 'This is a particularly long sentence for a WebJack transmission.');
 });
 
 test.skip('decoder handles broken transmissions correctly', function (t) {
-	return testNTransmissions(t, "broken_one.wav", 6);
+	return testNTransmissions(t, "broken_one.wav", 0, null);
 });
