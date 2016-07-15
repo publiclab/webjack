@@ -6,7 +6,7 @@ WebJack.Connection = Class.extend({
 
     var connection = this;
 
-	var audioCtx = new AudioContext();
+	var audioCtx = args.audioCtx || new AudioContext();
 	var sampleRate = audioCtx.sampleRate;
 	var baud = args.baud;
 
@@ -20,9 +20,9 @@ WebJack.Connection = Class.extend({
 	  console.log("-- audioprocess data (" + samplesIn.length + " samples) --");
 
 	  if (!decoder){
-	  	decoder = new SoftModemDecoder(connection.args, rxCallback);
+	  	decoder = new WebJack.Decoder({ baud: args.baud, sampleRate: sampleRate, onReceive: rxCallback});
 	  }
-	  decoder.demod(samplesIn);
+	  decoder.decode(samplesIn);
 	}
 
 	function successCallback(stream) {
@@ -43,6 +43,7 @@ WebJack.Connection = Class.extend({
 	  console.log('navigator.getUserMedia error: ', error);
 	}
 
+	navigator = args.navigator || navigator;
 	navigator.mediaDevices.getUserMedia(
 		{
 		  audio: true,
@@ -72,9 +73,7 @@ WebJack.Connection = Class.extend({
 
     // Sends request for a standard data packet
     connection.get = function(data) {
-    	rxCallback = function(bytes){
-			data(bytes);
-    	};
+    	
     }
 
     // Sends data to device
@@ -100,10 +99,10 @@ WebJack.Connection = Class.extend({
     // Listens for data packets and runs 
     // passed function listener() on results
     connection.listen = function(listener) {
-
-      // connection.history.received.push(data);
-      // listener(data);
-
+    	rxCallback = function(data){
+			listener(data);
+    		connection.history.received.push(data);
+    	};
     }    
 
 

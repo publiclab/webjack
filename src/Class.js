@@ -2,7 +2,10 @@ var WebJack = {};
 
 (function(exports){
 
-  exports = WebJack;
+  if (typeof module === 'undefined')
+    exports = WebJack;
+  else 
+    module.exports = WebJack;
 
 })(typeof exports === 'undefined'? this['WebJack']={}: exports);
 

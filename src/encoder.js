@@ -6,10 +6,10 @@ WebJack.Encoder = Class.extend({
 
 		var targetSampleRate = args.sampleRate;
 		var sampleRate = 44100;
-		console.log("target sample rate: " + targetSampleRate);
+		// console.log("target sample rate: " + targetSampleRate);
 		var baud = args.baud;
-		var freqLow = 4900;
-		var freqHigh = 7350;
+		var freqLow = 2450;
+		var freqHigh = 4900; //7350;
 
 		var samplesPerBit = Math.ceil(sampleRate/baud);
 		var samplesPeriodLow = Math.ceil(sampleRate/freqLow)
