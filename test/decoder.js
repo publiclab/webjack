@@ -1,7 +1,7 @@
 'use strict';
 
 var fs = require('fs');
-var test = require('tape');
+var test = require('blue-tape');
 var sinon = require('sinon');
 var WavDecoder = require("wav-decoder");
 
@@ -18,35 +18,45 @@ const readFile = (filepath) => {
   });
 };
 
-function testNTransmissions(t, file, numOfTransmissions){
+
+function testNTransmissions(t, file, numOfTransmissions, content){
+	var sampleRate = 44100;
 	var callback = sinon.spy();
-	var decoder = new webjack.Decoder({sampleRate: 44100, baud: 1225, onResult: callback});
+	var decoder = new webjack.Decoder({sampleRate: sampleRate, baud: 1225, onReceive: callback});
 
-	readFile("./test/fixtures/" + file).then((buffer) => {
-	  return WavDecoder.decode(buffer);
-	}).then(function(audioData) {
-		sampleRate = audioData.sampleRate;
-		samples = audioData.channelData[0];  // Float32Array
-		decoder.decode(samples, callback);
+	return readFile("test/fixtures/" + file).then( buffer => (WavDecoder.decode(buffer)) )
+		.then(function(audioData) {
+			var fileSampleRate = audioData.sampleRate;
+			var samples = audioData.channelData[0];  // Float32Array
+			decoder.decode(samples);
+			t.equal(fileSampleRate, sampleRate, 'sample rates fit');
+			t.equal(callback.callCount, numOfTransmissions, "num of detected transmissions");
+			if (content != undefined)
+				t.equal(callback.alwaysCalledWithExactly(content), true, "decoded content correctly");
+			console.log(callback.printf('%C'));
 	});
-
-	t.equal(callback.callCount, numOfTransmissions, "num of detected transmissions");
-	t.equal(callback.alwaysCalledWithExactly("SoftModem"), true, "decoded content correctly");
-	t.end();
 }
 
-test('decoder decodes single transmission', function (t) {
-	testNTransmissions(t, "SoftModem.wav", 1);
+test('decoder decodes (multiple) SoftModem signals, with spaces inbetween', function (t) {
+	return testNTransmissions(t, "10xWebJack_with_spaces.wav", 10, 'WebJack');
 });
 
-test('decoder decodes repeated transmissions (with spaces inbetween)', function (t) {
-	testNTransmissions(t, "10xSoftModem_spaces.wav", 10);
+test('decoder decodes signals without spaces inbetween', function (t) {
+	return testNTransmissions(t, "10xWebJack.wav", 10, 'WebJack');
 });
 
-test('decoder decodes repeated transmission (without spaces)', function (t) {
-	testNTransmissions(t, "10xSoftModem.wav", 10);
+test('decodes decodes recording from Nexus5', function (t) {
+	return testNTransmissions(t, "10xWebJack_Nexus5.wav", 10, 'WebJack');
+});
+
+test('decodes decodes recording from Razr i', function (t) {
+	return testNTransmissions(t, "10xWebJack_razri.wav", 10, 'WebJack');
+});
+
+test('decodes decodes much words, such sentence', function (t) {
+	return testNTransmissions(t, "much_words.wav", 1, 'This is a particularly long sentence for a WebJack transmission.');
 });
 
 test('decoder handles broken transmissions correctly', function (t) {
-	testNTransmissions(t, "broken_one.wav", 6);
+	return testNTransmissions(t, "broken_one.wav", 0, null);
 });

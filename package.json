@@ -24,6 +24,7 @@
   },
   "dependencies": {},
   "devDependencies": {
+    "blue-tape": "^0.2.0",
     "grunt": "^1.0.1",
     "grunt-cli": "^1.2.0",
     "grunt-contrib-concat": "^0.5.0",
