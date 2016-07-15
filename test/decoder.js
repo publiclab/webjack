@@ -37,7 +37,7 @@ function testNTransmissions(t, file, numOfTransmissions, content){
 	});
 }
 
-test('decoder decodes (multiple) SoftModem signals, with spaces inbetween', function (t) {
+test.skip('decoder decodes (multiple) SoftModem signals, with spaces inbetween', function (t) {
 	return testNTransmissions(t, "10xWebJack_with_spaces.wav", 10, 'WebJack');
 });
 
