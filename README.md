@@ -5,6 +5,8 @@ WebJack
 
 WebJack is a JavaScript library that uses [SoftModem](https://github.com/arms22/SoftModem), an Arduino library, to create two-way communication between a browser window and an Arduino. No need to install drivers. Just plug in an audio cable and read/send data from the browser.
 
+Try it out in this live demo: https://publiclab.github.io/webjack/examples/
+
 ## Installation
 ```
 npm install --save webjack
