@@ -73,9 +73,7 @@ WebJack.Connection = Class.extend({
 
     // Sends request for a standard data packet
     connection.get = function(data) {
-    	rxCallback = function(bytes){
-			data(bytes);
-    	};
+    	
     }
 
     // Sends data to device
@@ -101,10 +99,10 @@ WebJack.Connection = Class.extend({
     // Listens for data packets and runs 
     // passed function listener() on results
     connection.listen = function(listener) {
-
-      // connection.history.received.push(data);
-      // listener(data);
-
+    	rxCallback = function(data){
+			listener(data);
+    		connection.history.received.push(data);
+    	};
     }    
 
 

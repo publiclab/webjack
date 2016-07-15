@@ -32,7 +32,7 @@
 
       connection = new WebJack.Connection({baud: 1225});
 
-      connection.get(function(data) {
+      connection.listen(function(data) {
         var log = $('.webjack-log');
         log.append(data);
         log.append('<br> >');
