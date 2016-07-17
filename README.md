@@ -18,6 +18,12 @@ bower install -S webjack
 If not already done, install the SoftModem Arduino library:
 [https://github.com/arms22/SoftModem](https://github.com/arms22/SoftModem)
 
+Make sure to set up SoftModem.h with these parameters:
+```cpp
+#define SOFT_MODEM_BAUD_RATE   (1225)
+#define SOFT_MODEM_LOW_FREQ    (2450)
+#define SOFT_MODEM_HIGH_FREQ   (4900)
+```
 
 ## Usage
 ```js
@@ -44,3 +50,12 @@ Assuming `tape` is installed globally:
 ```
 npm test
 ```
+
+
+##Developers
+
+Help improve Public Lab software!
+
+* Join the 'plots-dev@googlegroups.com' discussion list to get involved
+* Find lots of info on contributing at http://publiclab.org/wiki/developers
+* Review specific contributor guidelines at http://publiclab.org/wiki/contributing-to-public-lab-software
