@@ -23,7 +23,7 @@
   <button class="send">Send</button>
 
   <h3>Received data:</h3>
-  <div class="webjack-log">></div>
+  <div class="webjack-log"></div>
 
   <script>
 
@@ -36,7 +36,7 @@
       connection.listen(function(data) {
         var log = $('.webjack-log');
         log.append(data);
-        log.append('<br> >');
+        log.append('<br>');
         console.log('Arduino to WebJack: ' + data);
       });
 
