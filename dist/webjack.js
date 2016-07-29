@@ -86,10 +86,11 @@ WebJack.Decoder = Class.extend({
 		var onReceive = args.onReceive;
 		var csvContent = '';
 
-		var sampleRate = args.sampleRate;
+
 		var baud = args.baud;
-		var freqLow = 2450;
-		var freqHigh = 4900; //7350;  > 7000 is to large, will be attenuated
+		var freqLow = args.freqLow;
+		var freqHigh = args.freqHigh;
+		var sampleRate = args.sampleRate;
 
 		var samplesPerBit = Math.ceil(sampleRate/baud);
 		var preambleLength = Math.ceil(sampleRate*40/1000/samplesPerBit);
@@ -104,12 +105,12 @@ WebJack.Decoder = Class.extend({
 
 			bitCounter : 0,  // counts up to 8 bits
 			byteBuffer : 0,  // where the 8 bits get assembled
-			wordBuffer : '', // concat received chars
+			wordBuffer : [], // concat received chars
 
 			lastTransition : 0,
 			lastBitState : 0,
 			t : 0 // sample counter, no reset currently -> will overflow
-		}
+		};
 
 		var cLowReal = new Float32Array(samplesPerBit);
 		var cLowImag = new Float32Array(samplesPerBit);
@@ -201,11 +202,23 @@ WebJack.Decoder = Class.extend({
 				if (bit)
 					state.byteBuffer += 128;
 				if (state.bitCounter == 8) {
-					state.wordBuffer += String.fromCharCode(state.byteBuffer);
+					state.wordBuffer.push(state.byteBuffer);
 					state.byteBuffer = 0;
 				}
 			}
 		}
+
+		function emitString(buffer) {
+			var word = '';
+			if (buffer.length) {
+		        buffer.forEach(function(octet) {
+		          word += String.fromCharCode(octet);
+		        });
+		        buffer.length = 0;
+		    }
+		    onReceive(word);
+		}
+		var emit = args.firmata ? onReceive : emitString;
 
 		decoder.decode = function(samples){
 			// var a = performance.now();
@@ -224,7 +237,7 @@ WebJack.Decoder = Class.extend({
 							nextState = state.START;
 							state.lastBitState = 0;
 							state.byteBuffer = 0;
-			          		state.wordBuffer = '';
+			          		state.wordBuffer = [];
 						}
 						break;
 
@@ -252,12 +265,12 @@ WebJack.Decoder = Class.extend({
 				        } else if (bits_total == 11){ // all bits high, stop bit, push bit, preamble
 				        	addBitNTimes(1, symbols - 3);
 			          		nextState = state.START;
-			          		onReceive(state.wordBuffer);
-			          		state.wordBuffer = '';
+			          		emit(state.wordBuffer);
+			          		state.wordBuffer = [];
 				        } else if (bits_total == 10) { // all bits high, stop bit, push bit, no new preamble
 				        	addBitNTimes(1, symbols - 2);
 			          		nextState = state.PREAMBLE;
-			          		onReceive(state.wordBuffer);
+			          		emit(state.wordBuffer);
 				        } else if (bits_total == 9) { // all bits high, stop bit, no push bit
 				            addBitNTimes(1, symbols - 1);
 				            nextState = state.START;
@@ -278,11 +291,11 @@ WebJack.Decoder = Class.extend({
 							nextState = state.START;
 						} else if (symbols == 3) {
 							nextState = state.START;
-							onReceive(state.wordBuffer);
-							state.wordBuffer = '';
+							emit(state.wordBuffer);
+							state.wordBuffer = [];
 						} else if (symbols >= 2) {	
 							nextState = state.PREAMBLE;
-							onReceive(state.wordBuffer);
+							emit(state.wordBuffer);
 						} else
 							nextState = state.PREAMBLE;
 
@@ -324,12 +337,12 @@ WebJack.Encoder = Class.extend({
 
 		var encoder = this;
 
-		var targetSampleRate = args.sampleRate;
 		var sampleRate = 44100;
+		var targetSampleRate = args.sampleRate;
 		// console.log("target sample rate: " + targetSampleRate);
 		var baud = args.baud;
-		var freqLow = 2450;
-		var freqHigh = 4900; //7350;
+		var freqLow = args.freqLow;
+		var freqHigh = args.freqHigh;
 
 		var samplesPerBit = Math.ceil(sampleRate/baud);
 		var samplesPeriodLow = Math.ceil(sampleRate/freqLow)
@@ -381,8 +394,8 @@ WebJack.Encoder = Class.extend({
 		}
 
 		encoder.modulate = function(data){
-			var utf8 = toUTF8(data)
-			var bufferLength = (preambleLength + 10*utf8.length + pushbitLength)*samplesPerBit;
+			var uint8 = args.firmata ? data : toUTF8(data);
+			var bufferLength = (preambleLength + 10*(uint8.length) + pushbitLength)*samplesPerBit;
 			var samples = new Float32Array(bufferLength);
 
 			var i = 0;
@@ -394,8 +407,8 @@ WebJack.Encoder = Class.extend({
 			}
 
 			pushBits(1, preambleLength);
-			for (var x in utf8) {
-				var c = (utf8[x] << 1) | 0x200;
+			for (var x = 0; x < uint8.length; x++) {
+				var c = (uint8[x] << 1) | 0x200;
 				for (var b = 0; b < 10; b++, c >>= 1)
 					pushBits( c&1, 1);
 			}
@@ -562,36 +575,24 @@ WebJack.Resampler = Class.extend({
 });
 'use strict';
 
-function SoftModemDecoder(baud, sampleRate, rxCallback){
-	this.baud = baud;
-	this.sampleRate = sampleRate;
-	this.rxCallback = rxCallback;
-}
-
-SoftModemDecoder.prototype = {
-	baud : 1225,
-	sampleRate : 0,
-	rxCallback : null,
-
-
-
-	demod : function(samples){
-		
-	}
-}
-'use strict';
-
 WebJack.Connection = Class.extend({
 
   init: function(args) {
 
     var connection = this;
 
-	var audioCtx = args.audioCtx || new AudioContext();
-	var sampleRate = audioCtx.sampleRate;
-	var baud = args.baud;
+	var audioCtx = typeof args.audioCtx === 'undefined' ? new AudioContext() : args.audioCtx;
+	var firmata = typeof args.firmata === 'undefined' ? false : args.firmata;
 
-	var encoder = new WebJack.Encoder({baud: baud, sampleRate: sampleRate});
+	var opts = {
+		baud : 1225,
+		freqLow : 2450,
+		freqHigh : 4900,
+		sampleRate : audioCtx.sampleRate,
+		firmata : firmata
+	};
+
+	var encoder = new WebJack.Encoder(opts);
 	var decoder;
     var rxCallback;
 
@@ -601,7 +602,8 @@ WebJack.Connection = Class.extend({
 	  console.log("-- audioprocess data (" + samplesIn.length + " samples) --");
 
 	  if (!decoder){
-	  	decoder = new WebJack.Decoder({ baud: args.baud, sampleRate: sampleRate, onReceive: rxCallback});
+	  	opts.onReceive = rxCallback;
+	  	decoder = new WebJack.Decoder(opts);
 	  }
 	  decoder.decode(samplesIn);
 	}
@@ -609,10 +611,10 @@ WebJack.Connection = Class.extend({
 	function successCallback(stream) {
 	  var audioTracks = stream.getAudioTracks();
 	  console.log('Using audio device: ' + audioTracks[0].label);
-	  console.log("-- samplerate (" + sampleRate + ") --");
-	  stream.onended = function() {
-	    console.log('Stream ended');
-	  };
+	  console.log("-- samplerate (" + opts.sampleRate + ") --");
+	  if (!stream.active) {
+	    console.log('Stream not active');
+	  }
 	  audioSource = audioCtx.createMediaStreamSource(stream);
 	  decoderNode = audioCtx.createScriptProcessor(8192, 1, 1); // buffersize, input channels, output channels
 	  audioSource.connect(decoderNode);
@@ -657,21 +659,34 @@ WebJack.Connection = Class.extend({
     	
     }
 
+    var queue = [];
+    var locked = false;
+
     // Sends data to device
     connection.send = function(data) {
-
+    	
     	function playAudioBuffer(buffer) {
 			var bufferNode = audioCtx.createBufferSource();
 			bufferNode.buffer = buffer;
 			bufferNode.connect(audioCtx.destination);
+			locked = true;
 			bufferNode.start(0);
+			bufferNode.onended = function() {
+				locked = false;
+				if (queue.length)
+					playAudioBuffer(queue.shift());
+			}
 		}
 
+
     	var samples = encoder.modulate(data);
-    	var dataBuffer = audioCtx.createBuffer(1, samples.length, sampleRate);
+    	var dataBuffer = audioCtx.createBuffer(1, samples.length, opts.sampleRate);
     	dataBuffer.copyToChannel(samples, 0);
 
-    	playAudioBuffer(dataBuffer);
+    	if (locked)
+    		queue.push(dataBuffer);
+    	else
+    		playAudioBuffer(dataBuffer);
 
 		connection.history.sent.push(data);
     }
