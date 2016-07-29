@@ -20,20 +20,26 @@ const readFile = (filepath) => {
 
 
 function testNTransmissions(t, file, numOfTransmissions, content){
-	var sampleRate = 44100;
 	var callback = sinon.spy();
-	var decoder = new webjack.Decoder({sampleRate: sampleRate, baud: 1225, onReceive: callback});
+	var opts = {
+		sampleRate : 44100,
+		baud : 1225,
+		freqLow : 2450,
+		freqHigh : 4900,
+		onReceive : callback
+	};
+	var decoder = new webjack.Decoder(opts);
 
 	return readFile("test/fixtures/" + file).then( buffer => (WavDecoder.decode(buffer)) )
 		.then(function(audioData) {
 			var fileSampleRate = audioData.sampleRate;
 			var samples = audioData.channelData[0];  // Float32Array
 			decoder.decode(samples);
-			t.equal(fileSampleRate, sampleRate, 'sample rates fit');
+			t.equal(fileSampleRate, opts.sampleRate, 'sample rates fit');
 			t.equal(callback.callCount, numOfTransmissions, "num of detected transmissions");
-			if (content != undefined)
+			if (typeof content !== 'undefined')
 				t.equal(callback.alwaysCalledWithExactly(content), true, "decoded content correctly");
-			console.log(callback.printf('%C'));
+			//console.log(callback.printf('%C'));
 	});
 }
 
@@ -58,5 +64,5 @@ test('decodes decodes much words, such sentence', function (t) {
 });
 
 test('decoder handles broken transmissions correctly', function (t) {
-	return testNTransmissions(t, "broken_one.wav", 0, null);
+	return testNTransmissions(t, "broken_one.wav", 0, undefined);
 });

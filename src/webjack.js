@@ -6,11 +6,18 @@ WebJack.Connection = Class.extend({
 
     var connection = this;
 
-	var audioCtx = args.audioCtx || new AudioContext();
-	var sampleRate = audioCtx.sampleRate;
-	var baud = args.baud;
+	var audioCtx = typeof args.audioCtx === 'undefined' ? new AudioContext() : args.audioCtx;
+	var firmata = typeof args.firmata === 'undefined' ? false : args.firmata;
 
-	var encoder = new WebJack.Encoder({baud: baud, sampleRate: sampleRate});
+	var opts = {
+		baud : 1225,
+		freqLow : 2450,
+		freqHigh : 4900,
+		sampleRate : audioCtx.sampleRate,
+		firmata : firmata
+	};
+
+	var encoder = new WebJack.Encoder(opts);
 	var decoder;
     var rxCallback;
 
@@ -20,7 +27,8 @@ WebJack.Connection = Class.extend({
 	  console.log("-- audioprocess data (" + samplesIn.length + " samples) --");
 
 	  if (!decoder){
-	  	decoder = new WebJack.Decoder({ baud: args.baud, sampleRate: sampleRate, onReceive: rxCallback});
+	  	opts.onReceive = rxCallback;
+	  	decoder = new WebJack.Decoder(opts);
 	  }
 	  decoder.decode(samplesIn);
 	}
@@ -28,10 +36,10 @@ WebJack.Connection = Class.extend({
 	function successCallback(stream) {
 	  var audioTracks = stream.getAudioTracks();
 	  console.log('Using audio device: ' + audioTracks[0].label);
-	  console.log("-- samplerate (" + sampleRate + ") --");
-	  stream.onended = function() {
-	    console.log('Stream ended');
-	  };
+	  console.log("-- samplerate (" + opts.sampleRate + ") --");
+	  if (!stream.active) {
+	    console.log('Stream not active');
+	  }
 	  audioSource = audioCtx.createMediaStreamSource(stream);
 	  decoderNode = audioCtx.createScriptProcessor(8192, 1, 1); // buffersize, input channels, output channels
 	  audioSource.connect(decoderNode);
@@ -76,21 +84,34 @@ WebJack.Connection = Class.extend({
     	
     }
 
+    var queue = [];
+    var locked = false;
+
     // Sends data to device
     connection.send = function(data) {
-
+    	
     	function playAudioBuffer(buffer) {
 			var bufferNode = audioCtx.createBufferSource();
 			bufferNode.buffer = buffer;
 			bufferNode.connect(audioCtx.destination);
+			locked = true;
 			bufferNode.start(0);
+			bufferNode.onended = function() {
+				locked = false;
+				if (queue.length)
+					playAudioBuffer(queue.shift());
+			}
 		}
 
+
     	var samples = encoder.modulate(data);
-    	var dataBuffer = audioCtx.createBuffer(1, samples.length, sampleRate);
+    	var dataBuffer = audioCtx.createBuffer(1, samples.length, opts.sampleRate);
     	dataBuffer.copyToChannel(samples, 0);
 
-    	playAudioBuffer(dataBuffer);
+    	if (locked)
+    		queue.push(dataBuffer);
+    	else
+    		playAudioBuffer(dataBuffer);
 
 		connection.history.sent.push(data);
     }

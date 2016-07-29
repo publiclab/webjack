@@ -4,12 +4,12 @@ WebJack.Encoder = Class.extend({
 
 		var encoder = this;
 
-		var targetSampleRate = args.sampleRate;
 		var sampleRate = 44100;
+		var targetSampleRate = args.sampleRate;
 		// console.log("target sample rate: " + targetSampleRate);
 		var baud = args.baud;
-		var freqLow = 2450;
-		var freqHigh = 4900; //7350;
+		var freqLow = args.freqLow;
+		var freqHigh = args.freqHigh;
 
 		var samplesPerBit = Math.ceil(sampleRate/baud);
 		var samplesPeriodLow = Math.ceil(sampleRate/freqLow)
@@ -61,8 +61,8 @@ WebJack.Encoder = Class.extend({
 		}
 
 		encoder.modulate = function(data){
-			var utf8 = toUTF8(data)
-			var bufferLength = (preambleLength + 10*utf8.length + pushbitLength)*samplesPerBit;
+			var uint8 = args.firmata ? data : toUTF8(data);
+			var bufferLength = (preambleLength + 10*(uint8.length) + pushbitLength)*samplesPerBit;
 			var samples = new Float32Array(bufferLength);
 
 			var i = 0;
@@ -74,8 +74,8 @@ WebJack.Encoder = Class.extend({
 			}
 
 			pushBits(1, preambleLength);
-			for (var x in utf8) {
-				var c = (utf8[x] << 1) | 0x200;
+			for (var x = 0; x < uint8.length; x++) {
+				var c = (uint8[x] << 1) | 0x200;
 				for (var b = 0; b < 10; b++, c >>= 1)
 					pushBits( c&1, 1);
 			}

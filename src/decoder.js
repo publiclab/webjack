@@ -8,10 +8,11 @@ WebJack.Decoder = Class.extend({
 		var onReceive = args.onReceive;
 		var csvContent = '';
 
-		var sampleRate = args.sampleRate;
+
 		var baud = args.baud;
-		var freqLow = 2450;
-		var freqHigh = 4900; //7350;  > 7000 is to large, will be attenuated
+		var freqLow = args.freqLow;
+		var freqHigh = args.freqHigh;
+		var sampleRate = args.sampleRate;
 
 		var samplesPerBit = Math.ceil(sampleRate/baud);
 		var preambleLength = Math.ceil(sampleRate*40/1000/samplesPerBit);
@@ -26,12 +27,12 @@ WebJack.Decoder = Class.extend({
 
 			bitCounter : 0,  // counts up to 8 bits
 			byteBuffer : 0,  // where the 8 bits get assembled
-			wordBuffer : '', // concat received chars
+			wordBuffer : [], // concat received chars
 
 			lastTransition : 0,
 			lastBitState : 0,
 			t : 0 // sample counter, no reset currently -> will overflow
-		}
+		};
 
 		var cLowReal = new Float32Array(samplesPerBit);
 		var cLowImag = new Float32Array(samplesPerBit);
@@ -123,11 +124,23 @@ WebJack.Decoder = Class.extend({
 				if (bit)
 					state.byteBuffer += 128;
 				if (state.bitCounter == 8) {
-					state.wordBuffer += String.fromCharCode(state.byteBuffer);
+					state.wordBuffer.push(state.byteBuffer);
 					state.byteBuffer = 0;
 				}
 			}
 		}
+
+		function emitString(buffer) {
+			var word = '';
+			if (buffer.length) {
+		        buffer.forEach(function(octet) {
+		          word += String.fromCharCode(octet);
+		        });
+		        buffer.length = 0;
+		    }
+		    onReceive(word);
+		}
+		var emit = args.firmata ? onReceive : emitString;
 
 		decoder.decode = function(samples){
 			// var a = performance.now();
@@ -146,7 +159,7 @@ WebJack.Decoder = Class.extend({
 							nextState = state.START;
 							state.lastBitState = 0;
 							state.byteBuffer = 0;
-			          		state.wordBuffer = '';
+			          		state.wordBuffer = [];
 						}
 						break;
 
@@ -174,12 +187,12 @@ WebJack.Decoder = Class.extend({
 				        } else if (bits_total == 11){ // all bits high, stop bit, push bit, preamble
 				        	addBitNTimes(1, symbols - 3);
 			          		nextState = state.START;
-			          		onReceive(state.wordBuffer);
-			          		state.wordBuffer = '';
+			          		emit(state.wordBuffer);
+			          		state.wordBuffer = [];
 				        } else if (bits_total == 10) { // all bits high, stop bit, push bit, no new preamble
 				        	addBitNTimes(1, symbols - 2);
 			          		nextState = state.PREAMBLE;
-			          		onReceive(state.wordBuffer);
+			          		emit(state.wordBuffer);
 				        } else if (bits_total == 9) { // all bits high, stop bit, no push bit
 				            addBitNTimes(1, symbols - 1);
 				            nextState = state.START;
@@ -200,11 +213,11 @@ WebJack.Decoder = Class.extend({
 							nextState = state.START;
 						} else if (symbols == 3) {
 							nextState = state.START;
-							onReceive(state.wordBuffer);
-							state.wordBuffer = '';
+							emit(state.wordBuffer);
+							state.wordBuffer = [];
 						} else if (symbols >= 2) {	
 							nextState = state.PREAMBLE;
-							onReceive(state.wordBuffer);
+							emit(state.wordBuffer);
 						} else
 							nextState = state.PREAMBLE;
 
