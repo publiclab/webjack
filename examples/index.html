@@ -34,12 +34,14 @@
 
     jQuery(document).ready(function($) {
 
+      var log = $('.webjack-log');
+
       connection = new WebJack.Connection({baud: 1225});
 
       connection.listen(function(data) {
-        var log = $('.webjack-log');
         log.append(data);
         log.append('<br>');
+        log.scrollTop(log[0].scrollHeight);
         console.log('Arduino to WebJack: ' + data);
       });
 

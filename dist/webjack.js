@@ -364,8 +364,8 @@ WebJack.Encoder = Class.extend({
 			var phaseIncHigh = 2 * Math.PI * freqHigh / sampleRate;
 			
 			for (var i=0; i < samplesPerBit; i++) {
-				bitBufferLow.set( [Math.sin(phaseIncLow*i)], i);
-				bitBufferHigh.set( [Math.sin(phaseIncHigh*i)], i);
+				bitBufferLow.set( [Math.cos(phaseIncLow*i)], i);
+				bitBufferHigh.set( [Math.cos(phaseIncHigh*i)], i);
 			}
 		})();
 
