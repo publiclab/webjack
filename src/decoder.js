@@ -31,7 +31,8 @@ WebJack.Decoder = Class.extend({
 
 			lastTransition : 0,
 			lastBitState : 0,
-			t : 0 // sample counter, no reset currently -> will overflow
+			t : 0, // sample counter, no reset currently -> will overflow
+			c : 0  // counter for the circular correlation arrays
 		};
 
 		var cLowReal = new Float32Array(samplesPerBit);
@@ -55,12 +56,9 @@ WebJack.Decoder = Class.extend({
 			}
 		})();
 
-		function getMaxOfArray(numArray) {
-			return Math.max.apply(null, numArray);
-		}
 
 		function normalize(samples){
-			var max = getMaxOfArray(samples);
+			var max = Math.max.apply(null, samples);
 			for (var i = 0; i < samples.length; i++){
 				samples[i] /= max;
 			}
@@ -74,15 +72,26 @@ WebJack.Decoder = Class.extend({
 			return s;
 		}
 
+		function smoothing(samples, n){
+			for(var i = n; i < samples.length - n; i++){
+				for(var o = -n; o <= n; o++){
+					samples[i] += samples[i+o];
+				}
+				samples[i] /= (n*2)+1;
+				if (DEBUG) csvContent += samples[i] + '\n';
+			}
+		}
 
-		function demod(samples){
+		function demod(smpls){
 			var symbols = [];
 			var cLow, cHigh;
 
+			var samples = smpls;
 			normalize(samples);
 
 			// correlation
-			for(var i = 0, s = 0; i < samples.length; i++, s++){
+			var s = state.c;
+			for(var i = 0; i < samples.length; i++, s++){
 				cLowReal[s] = samples[i] * cosinusLow[s];
 				cLowImag[s] = samples[i] * sinusLow[s];
 				cHighReal[s] = samples[i] * cosinusHigh[s];
@@ -95,13 +104,10 @@ WebJack.Decoder = Class.extend({
 				if (s == samplesPerBit)
 					s = 0;
 			}
-			// smoothing
-			for(var i = 4; i < samples.length - 4; i++){
-				samples[i] = (samples[i-4] + samples[i-3] + samples[i-2] 
-					+ samples[i-1] + samples[i] + samples[i+1] 
-					+ samples[i+2] + samples[i+3] + samples[i+4] )/9;
-				if (DEBUG) csvContent += samples[i] + '\n';
-			}
+			state.c = s;
+
+			smoothing(samples,3);
+
 			// discriminate bitlengths
 			for(var i = 1; i < samples.length; i++){
 				if ((samples[i] * samples[i-1] < 0) || (samples[i-1] == 0)){
@@ -151,11 +157,12 @@ WebJack.Decoder = Class.extend({
 
 			for(var i = 0; i < bitlengths.length ; i++) {
 				var symbols = bitlengths[i];
+				if (DEBUG) console.log(symbols);
 				switch (state.current){
 
 					case state.PREAMBLE:
 						// if (symbols >= 11 && symbols <= 49)
-						if (symbols >= preambleLength -3  && symbols <= preambleLength + 3) {
+						if (symbols >= preambleLength -3  && symbols <= preambleLength + 20) {
 							nextState = state.START;
 							state.lastBitState = 0;
 							state.byteBuffer = 0;
@@ -184,15 +191,18 @@ WebJack.Decoder = Class.extend({
 
 				        if (bits_total > 11) {
 			          		nextState = state.PREAMBLE;
+			          		if (DEBUG) console.log('#too much bits#');
 				        } else if (bits_total == 11){ // all bits high, stop bit, push bit, preamble
 				        	addBitNTimes(1, symbols - 3);
 			          		nextState = state.START;
 			          		emit(state.wordBuffer);
+			          		if (DEBUG) console.log('>emit<');
 			          		state.wordBuffer = [];
 				        } else if (bits_total == 10) { // all bits high, stop bit, push bit, no new preamble
 				        	addBitNTimes(1, symbols - 2);
 			          		nextState = state.PREAMBLE;
 			          		emit(state.wordBuffer);
+			          		if (DEBUG) console.log('|emit|');
 				        } else if (bits_total == 9) { // all bits high, stop bit, no push bit
 				            addBitNTimes(1, symbols - 1);
 				            nextState = state.START;
@@ -201,22 +211,27 @@ WebJack.Decoder = Class.extend({
 				            nextState = state.STOP;
 				        } else {
 				            addBitNTimes(bit, symbols);
+							nextState = state.DATA;
 				        } 
 
-				        if (symbols == 0) // 0 always indicates a misinterpreted symbol
+				        if (symbols == 0){ // 0 always indicates a misinterpreted symbol
 				        	nextState = state.PREAMBLE;
+				        	if (DEBUG) console.log('#demod error#');
+				        }
 				        break;
 
 					case state.STOP:
-						if (DEBUG) console.log('STOP');
+						if (DEBUG) console.log(' STOP');
 						if (symbols == 1) {
 							nextState = state.START;
 						} else if (symbols == 3) {
 							nextState = state.START;
 							emit(state.wordBuffer);
+			          		if (DEBUG) console.log('>>emit<<');
 							state.wordBuffer = [];
 						} else if (symbols >= 2) {	
 							nextState = state.PREAMBLE;
+			          		if (DEBUG) console.log('||emit||');
 							emit(state.wordBuffer);
 						} else
 							nextState = state.PREAMBLE;
