@@ -82,7 +82,6 @@ WebJack.Decoder = Class.extend({
 
 		var decoder = this;
 
-		var DEBUG = false;
 		var onReceive = args.onReceive;
 		var csvContent = '';
 
@@ -156,7 +155,7 @@ WebJack.Decoder = Class.extend({
 					samples[i] += samples[i+o];
 				}
 				samples[i] /= (n*2)+1;
-				if (DEBUG) csvContent += samples[i] + '\n';
+				if (args.debug) csvContent += samples[i] + '\n';
 			}
 		}
 
@@ -235,7 +234,7 @@ WebJack.Decoder = Class.extend({
 
 			for(var i = 0; i < bitlengths.length ; i++) {
 				var symbols = bitlengths[i];
-				if (DEBUG) console.log(symbols);
+				if (args.debug) console.log(symbols);
 				switch (state.current){
 
 					case state.PREAMBLE:
@@ -249,7 +248,7 @@ WebJack.Decoder = Class.extend({
 						break;
 
 					case state.START:
-						if (DEBUG) console.log('START');
+						if (args.debug) console.log('START');
 						state.bitCounter = 0;
 						if (symbols == 1)
 							nextState = state.DATA;
@@ -262,25 +261,25 @@ WebJack.Decoder = Class.extend({
 						break;
 
 					case state.DATA:
-						if (DEBUG) console.log('DATA');
+						if (args.debug) console.log('DATA');
 						var bits_total = symbols + state.bitCounter;
 				        var bit = state.lastBitState ^ 1;
 				        state.lastBitState = bit;
 
 				        if (bits_total > 11) {
 			          		nextState = state.PREAMBLE;
-			          		if (DEBUG) console.log('#too much bits#');
+			          		if (args.debug) console.log('#too much bits#');
 				        } else if (bits_total == 11){ // all bits high, stop bit, push bit, preamble
 				        	addBitNTimes(1, symbols - 3);
 			          		nextState = state.START;
 			          		emit(state.wordBuffer);
-			          		if (DEBUG) console.log('>emit<');
+			          		if (args.debug) console.log('>emit<');
 			          		state.wordBuffer = [];
 				        } else if (bits_total == 10) { // all bits high, stop bit, push bit, no new preamble
 				        	addBitNTimes(1, symbols - 2);
 			          		nextState = state.PREAMBLE;
 			          		emit(state.wordBuffer);
-			          		if (DEBUG) console.log('|emit|');
+			          		if (args.debug) console.log('|emit|');
 				        } else if (bits_total == 9) { // all bits high, stop bit, no push bit
 				            addBitNTimes(1, symbols - 1);
 				            nextState = state.START;
@@ -294,22 +293,22 @@ WebJack.Decoder = Class.extend({
 
 				        if (symbols == 0){ // 0 always indicates a misinterpreted symbol
 				        	nextState = state.PREAMBLE;
-				        	if (DEBUG) console.log('#demod error#');
+				        	if (args.debug) console.log('#demod error#');
 				        }
 				        break;
 
 					case state.STOP:
-						if (DEBUG) console.log(' STOP');
+						if (args.debug) console.log(' STOP');
 						if (symbols == 1) {
 							nextState = state.START;
 						} else if (symbols == 3) {
 							nextState = state.START;
 							emit(state.wordBuffer);
-			          		if (DEBUG) console.log('>>emit<<');
+			          		if (args.debug) console.log('>>emit<<');
 							state.wordBuffer = [];
 						} else if (symbols >= 2) {	
 							nextState = state.PREAMBLE;
-			          		if (DEBUG) console.log('||emit||');
+			          		if (args.debug) console.log('||emit||');
 							emit(state.wordBuffer);
 						} else
 							nextState = state.PREAMBLE;
@@ -322,17 +321,17 @@ WebJack.Decoder = Class.extend({
 						state.byteBuffer = 0;
 				}
 				state.current = nextState;
-				// if ((nextState == state.START) && DEBUG) {
+				// if ((nextState == state.START) && args.debug) {
 				// 	// console.log(csvContent);
 				// 	downloadDemodulatedData();
 				// }
 			}
-			if (DEBUG) csvContent = '';
+			if (args.debug) csvContent = '';
 			// console.log('audio event decode time: ' + Math.round(performance.now()-a) + " ms");
 
-			if (state.t >= 441000 && DEBUG) { // download demodulated signal after ~10 sec
+			if (state.t >= 441000 && args.debug) { // download demodulated signal after ~10 sec
 				downloadDemodulatedData();
-				DEBUG = false;
+				args.debug = false;
 			} 
 		}
 
@@ -369,7 +368,7 @@ WebJack.Encoder = Class.extend({
 		// console.log("periods high: "+ samplesPeriodHigh);
 
 		var preambleLength = Math.ceil(sampleRate*40/1000/samplesPerBit);
-		var pushbitLength =  Math.ceil(sampleRate*5/1000/samplesPerBit);
+		// var pushbitLength =  1; //Math.ceil(sampleRate*5/1000/samplesPerBit);
 
 		var bitBufferLow = new Float32Array(samplesPerBit);
 		var bitBufferHigh = new Float32Array(samplesPerBit);
@@ -410,7 +409,7 @@ WebJack.Encoder = Class.extend({
 
 		encoder.modulate = function(data){
 			var uint8 = args.firmata ? data : toUTF8(data);
-			var bufferLength = (preambleLength + 10*(uint8.length) + pushbitLength)*samplesPerBit;
+			var bufferLength = (preambleLength + 10*(uint8.length) + 1)*samplesPerBit;
 			var samples = new Float32Array(bufferLength);
 
 			var i = 0;
@@ -427,14 +426,14 @@ WebJack.Encoder = Class.extend({
 				for (var b = 0; b < 10; b++, c >>= 1)
 					pushBits( c&1, 1);
 			}
-			pushBits(1, pushbitLength);
+			pushBits(1, 1);
 
-			console.log("gen. audio length: " +samples.length);
+			if (args.debug) console.log("gen. audio length: " +samples.length);
 			var resampler = new WebJack.Resampler({inRate: sampleRate, outRate: targetSampleRate, inputBuffer: samples});
 			resampler.resample(samples.length);
 			var resampled = resampler.outputBuffer();
 			// console.log(samples);
-			console.log("resampled audio length: " + resampled.length);
+			if (args.debug) console.log("resampled audio length: " + resampled.length);
 			// console.log(resampled);
 
 			return resampled;
