@@ -109,7 +109,7 @@ WebJack.Decoder = Class.extend({
 
 			// discriminate bitlengths
 			for(var i = 1; i < samples.length; i++){
-				if ((samples[i] * samples[i-1] < 0) || (samples[i-1] == 0)){
+				if ((samples[i] * samples[i-1] < 0) || (samples[i-1] = 0)){
 					var bits = Math.round((state.t - state.lastTransition)/ samplesPerBit);
 					state.lastTransition = state.t;
 					symbols.push(bits);
@@ -125,9 +125,9 @@ WebJack.Decoder = Class.extend({
 				throw 'byteBuffer too small';
 			for (var b = 0; b < n; b++){
 				state.bitCounter++;
-				state.byteBuffer >>= 1;
+				state.byteBuffer >>>= 1;
 				if (bit)
-					state.byteBuffer += 128;
+					state.byteBuffer |= 128;
 				if (state.bitCounter == 8) {
 					state.wordBuffer.push(state.byteBuffer);
 					state.byteBuffer = 0;
@@ -186,31 +186,31 @@ WebJack.Decoder = Class.extend({
 						if (args.debug) console.log('DATA');
 						var bits_total = symbols + state.bitCounter;
 				        var bit = state.lastBitState ^ 1;
-				        state.lastBitState = bit;
 
-				        if (bits_total > 11) {
+				        if (bits_total >= 11) {
 			          		nextState = state.PREAMBLE;
-			          		if (args.debug) console.log('#too much bits#');
 				        } else if (bits_total == 11){ // all bits high, stop bit, push bit, preamble
 				        	addBitNTimes(1, symbols - 3);
 			          		nextState = state.START;
 			          		emit(state.wordBuffer);
-			          		if (args.debug) console.log('>emit<');
+			          		if (args.debug) console.log('>emit< ' + state.wordBuffer[0].toString(2));
 			          		state.wordBuffer = [];
 				        } else if (bits_total == 10) { // all bits high, stop bit, push bit, no new preamble
 				        	addBitNTimes(1, symbols - 2);
 			          		nextState = state.PREAMBLE;
 			          		emit(state.wordBuffer);
-			          		if (args.debug) console.log('|emit|');
+			          		if (args.debug) console.log('|emit| ' + state.wordBuffer[0].toString(2));
 				        } else if (bits_total == 9) { // all bits high, stop bit, no push bit
 				            addBitNTimes(1, symbols - 1);
 				            nextState = state.START;
 				        } else if (bits_total == 8) {
 				            addBitNTimes(bit, symbols);
 				            nextState = state.STOP;
+				        	state.lastBitState = bit;
 				        } else {
 				            addBitNTimes(bit, symbols);
 							nextState = state.DATA;
+				        	state.lastBitState = bit;
 				        } 
 
 				        if (symbols == 0){ // 0 always indicates a misinterpreted symbol
@@ -226,11 +226,11 @@ WebJack.Decoder = Class.extend({
 						} else if (symbols == 3) {
 							nextState = state.START;
 							emit(state.wordBuffer);
-			          		if (args.debug) console.log('>>emit<<');
+			          		if (args.debug) console.log('>>emit<< ' + state.wordBuffer[0].toString(2));
 							state.wordBuffer = [];
 						} else if (symbols >= 2) {	
 							nextState = state.PREAMBLE;
-			          		if (args.debug) console.log('||emit||');
+			          		if (args.debug) console.log('||emit|| ' + state.wordBuffer[0].toString(2));
 							emit(state.wordBuffer);
 						} else
 							nextState = state.PREAMBLE;
@@ -251,10 +251,10 @@ WebJack.Decoder = Class.extend({
 			if (args.debug) csvContent = '';
 			// console.log('audio event decode time: ' + Math.round(performance.now()-a) + " ms");
 
-			if (state.t >= 441000 && args.debug) { // download demodulated signal after ~10 sec
-				downloadDemodulatedData();
-				args.debug = false;
-			} 
+			// if (state.t >= 441000 && args.debug) { // download demodulated signal after ~10 sec
+			// 	downloadDemodulatedData();
+			// 	args.debug = false;
+			// } 
 		}
 
 		function downloadDemodulatedData(){

@@ -62,7 +62,7 @@ WebJack.Encoder = Class.extend({
 
 		encoder.modulate = function(data){
 			var uint8 = args.firmata ? data : toUTF8(data);
-			var bufferLength = (preambleLength + 10*(uint8.length) + 1)*samplesPerBit;
+			var bufferLength = (preambleLength + 10*(uint8.length) + 2)*samplesPerBit;
 			var samples = new Float32Array(bufferLength);
 
 			var i = 0;
@@ -80,6 +80,7 @@ WebJack.Encoder = Class.extend({
 					pushBits( c&1, 1);
 			}
 			pushBits(1, 1);
+			pushBits(0, 1);
 
 			if (args.debug) console.log("gen. audio length: " +samples.length);
 			var resampler = new WebJack.Resampler({inRate: sampleRate, outRate: targetSampleRate, inputBuffer: samples});
