@@ -36,7 +36,7 @@
 
       var log = $('.webjack-log');
 
-      connection = new WebJack.Connection({baud: 1225});
+      connection = new WebJack.Connection();
 
       connection.listen(function(data) {
         log.append(data);

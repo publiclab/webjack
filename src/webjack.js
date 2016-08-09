@@ -6,15 +6,22 @@ WebJack.Connection = Class.extend({
 
     var connection = this;
 
+
+    function ifUndef(arg, Default){
+    	return typeof arg === 'undefined' ? Default : arg;
+    }
+
+    var args = ifUndef(args, {});
 	var audioCtx = typeof args.audioCtx === 'undefined' ? new AudioContext() : args.audioCtx;
-	var firmata = typeof args.firmata === 'undefined' ? false : args.firmata;
 
 	var opts = {
 		baud : 1225,
 		freqLow : 2450,
 		freqHigh : 4900,
 		sampleRate : audioCtx.sampleRate,
-		firmata : firmata
+		debug : ifUndef(args.debug, false),
+		softmodem : ifUndef(args.softmodem, true),
+		raw : ifUndef(args.raw, false)
 	};
 
 	var encoder = new WebJack.Encoder(opts);
@@ -54,7 +61,9 @@ WebJack.Connection = Class.extend({
 	navigator = args.navigator || navigator;
 	navigator.mediaDevices.getUserMedia(
 		{
-		  audio: true,
+		  audio: {
+		      optional: [{ echoCancellation: false }]
+		  },
 		  video: false
 		}
 	).then(
