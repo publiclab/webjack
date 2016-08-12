@@ -1,3 +1,6 @@
 bower_components
 node_modules
 *.swp
+*.pem
+*.pem.org
+*.csr
