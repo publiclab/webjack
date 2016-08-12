@@ -59,7 +59,7 @@ test('decodes signals without spaces inbetween', function (t) {
 	return testNTransmissions(t, "10xWebJack.wav", 10, 'WebJack');
 });
 
-test('decodes recording from Nexus5', function (t) {
+test.skip('decodes recording from Nexus5', function (t) {
 	return testNTransmissions(t, "10xWebJack_Nexus5.wav", 10, 'WebJack');
 });
 
