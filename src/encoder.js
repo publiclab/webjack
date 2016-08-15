@@ -21,7 +21,7 @@ WebJack.Encoder = Class.extend({
 		// console.log("periods high: "+ samplesPeriodHigh);
 
 		var preambleLength = Math.ceil(sampleRate*40/1000/samplesPerBit);
-		var pushbitLength =  Math.ceil(sampleRate*5/1000/samplesPerBit);
+		var pushbitLength =  args.softmodem ? 1 : 2;
 
 		var bitBufferLow = new Float32Array(samplesPerBit);
 		var bitBufferHigh = new Float32Array(samplesPerBit);
@@ -61,7 +61,7 @@ WebJack.Encoder = Class.extend({
 		}
 
 		encoder.modulate = function(data){
-			var uint8 = args.firmata ? data : toUTF8(data);
+			var uint8 = args.raw ? data : toUTF8(data);
 			var bufferLength = (preambleLength + 10*(uint8.length) + pushbitLength)*samplesPerBit;
 			var samples = new Float32Array(bufferLength);
 
@@ -79,14 +79,16 @@ WebJack.Encoder = Class.extend({
 				for (var b = 0; b < 10; b++, c >>= 1)
 					pushBits( c&1, 1);
 			}
-			pushBits(1, pushbitLength);
+			pushBits(1, 1);
+			if (!args.softmodem)
+				pushBits(0, 1);
 
-			console.log("gen. audio length: " +samples.length);
+			if (args.debug) console.log("gen. audio length: " +samples.length);
 			var resampler = new WebJack.Resampler({inRate: sampleRate, outRate: targetSampleRate, inputBuffer: samples});
 			resampler.resample(samples.length);
 			var resampled = resampler.outputBuffer();
 			// console.log(samples);
-			console.log("resampled audio length: " + resampled.length);
+			if (args.debug) console.log("resampled audio length: " + resampled.length);
 			// console.log(resampled);
 
 			return resampled;

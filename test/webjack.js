@@ -30,14 +30,14 @@ function write (file, data) { /* jshint ignore:line */
   return fs.writeFileSync('./test/fixtures/' + file, data + '\n', 'utf8');
 }
 
-test('webjack has tests', function (t) {
+test.skip('webjack has tests', function (t) {
   // read('something.html')
   t.equal(true, true);
   t.end();
 });
 
 test('webjack module is exported', function (t) {
-	var conn = new webjack.Connection({baud: 1225, audioCtx: AudioContext, navigator : navigator});
+	var conn = new webjack.Connection({audioCtx: AudioContext, navigator : navigator});
   t.equal(typeof conn === 'object', true);
   t.end();
 });
