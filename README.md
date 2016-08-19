@@ -18,16 +18,11 @@ bower install -S webjack
 If not already done, install the SoftModem Arduino library:
 [https://github.com/arms22/SoftModem](https://github.com/arms22/SoftModem)
 
-Make sure to set up SoftModem.h with these parameters:
-```cpp
-#define SOFT_MODEM_BAUD_RATE   (1225)
-#define SOFT_MODEM_LOW_FREQ    (2450)
-#define SOFT_MODEM_HIGH_FREQ   (4900)
-```
 
 ## Usage
 ```js
-var connection = new WebJack.Connection();
+var profile = WebJack.Profiles.SoftModem;
+var connection = new WebJack.Connection(profile);
 
 connection.listen(function(data) {
 	console.log('received: ' + data);
@@ -36,6 +31,19 @@ connection.listen(function(data) {
 connection.send('some data');
 ```
 
+### Profiles
+There are three profiles:
+
+- SoftModem: default, for use with the SoftModem Arduino library
+- SoftModemLowFrequencies: try this if you have a long cable to reduce crosstalk (that leads to feedback)
+- Browser: inteded for browser-to-browser transmissions over the air
+
+
+For the _SoftModemLowFrequencies_ profile, you need to add this definitions to the head of you sketch:
+```cpp
+#define SOFT_MODEM_LOW_FREQ    (2450)
+#define SOFT_MODEM_HIGH_FREQ   (4900)
+```
 
 
 

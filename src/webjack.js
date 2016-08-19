@@ -11,17 +11,18 @@ WebJack.Connection = Class.extend({
     	return typeof arg === 'undefined' ? Default : arg;
     }
 
-    var args = ifUndef(args, {});
+    var args = ifUndef(args, WebJack.Profiles.SoftModem);
 	var audioCtx = typeof args.audioCtx === 'undefined' ? new AudioContext() : args.audioCtx;
 
 	var opts = {
-		baud : 1225,
-		freqLow : 2450,
-		freqHigh : 4900,
-		sampleRate : audioCtx.sampleRate,
-		debug : ifUndef(args.debug, false),
-		softmodem : ifUndef(args.softmodem, true),
-		raw : ifUndef(args.raw, false)
+		sampleRate 		 : audioCtx.sampleRate,
+		baud 			 : ifUndef(args.baud, 1225),
+		freqLow 		 : ifUndef(args.freqLow, 4900),
+		freqHigh 		 : ifUndef(args.freqHigh, 7350),
+		debug 			 : ifUndef(args.debug, false),
+		softmodem 		 : ifUndef(args.softmodem, true),
+		raw				 : ifUndef(args.raw, false),
+		echoCancellation : ifUndef(args.echoCancellation, false)
 	};
 
 	var encoder = new WebJack.Encoder(opts);
@@ -61,16 +62,15 @@ WebJack.Connection = Class.extend({
 	navigator = args.navigator || navigator;
 	navigator.mediaDevices.getUserMedia(
 		{
-		  audio: true,
+		  audio: {
+		      optional: [{ echoCancellation: opts.echoCancellation }]
+		  },
 		  video: false
 		}
 	).then(
 	  successCallback,
 	  errorCallback
 	);
-
-
-    connection.args = args; // connection.args.baud_rate, etc
 
 
     // an object containing two histories -- 
@@ -83,12 +83,6 @@ WebJack.Connection = Class.extend({
       // oldest first:
       received: []
 
-    }
-
-
-    // Sends request for a standard data packet
-    connection.get = function(data) {
-    	
     }
 
     var queue = [];
@@ -137,9 +131,14 @@ WebJack.Connection = Class.extend({
     // Returns valid JSON object if possible, 
     // or <false> if not.
     connection.validateJSON = function(data) {
-
+    	var object; 
+    	try {
+	        object = JSON.parse(data);
+	    } catch (e) {
+	        return false;
+	    }
+	    return object;
     }
-
 
   } 
 
