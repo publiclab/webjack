@@ -8,6 +8,12 @@ WebJack is a JavaScript library that uses [SoftModem](https://github.com/arms22/
 Try it out in this live demo: https://publiclab.github.io/webjack/examples/
 
 ## Installation
+
+1. If not already done, install the SoftModem Arduino library:
+[https://github.com/arms22/SoftModem](https://github.com/arms22/SoftModem)
+2. Choose an [example sketch](https://github.com/publiclab/webjack/tree/master/sketches) and upload it to your Arduino.
+3. Now install WebJack with
+
 ```
 npm install --save webjack
 ```
@@ -15,8 +21,6 @@ or
 ```
 bower install -S webjack 
 ```
-If not already done, install the SoftModem Arduino library:
-[https://github.com/arms22/SoftModem](https://github.com/arms22/SoftModem)
 
 
 ## Usage
@@ -32,20 +36,57 @@ connection.send('some data');
 ```
 
 ### Profiles
-There are three profiles:
-
-- SoftModem: default, for use with the SoftModem Arduino library
-- SoftModemLowFrequencies: try this if you have a long cable to reduce crosstalk (that leads to feedback)
-- Browser: inteded for browser-to-browser transmissions over the air
+Depending on the profile, WebJack uses different frequencies for the FSK modulation.
 
 
-For the _SoftModemLowFrequencies_ profile, you need to add this definitions to the head of you sketch:
+|  Profile                  | Parameters                     | Use Case |
+|---------------------------|--------------------------------|----------|
+| _SoftModem_ (default)     | 1225 bit/s, 4900 and 7350 Hz   | Communication with the SoftModem Arduino library    |
+| _SoftModemLowFrequencies_ | 1225 bit/s, 2450 and 4900 Hz   | Reduced crosstalk for long cables  |
+| _Browser_                 | 1225 bit/s, 19600 and 20825 Hz | Browser-to-browser transmissions over the air |
+
+For the _SoftModemLowFrequencies_ profile, echo cancellation is activated to reduce feedback produced by crosstalk between wires. Due to the echo cancellation some filters are applied that also reduce the upper frequency limit. Therefore you need to add this definitions to the head of your Arduino sketch, to configure SoftModem for lower frequencies:
 ```cpp
 #define SOFT_MODEM_LOW_FREQ    (2450)
 #define SOFT_MODEM_HIGH_FREQ   (4900)
 ```
+__Note:__ _It is recommended to make the cable length as short as possible, before using the non-default profile._
+
+The _Browser_ profile is a planned feature and not working yet. 
 
 
+### Individual Profile Options
+You can change profile attributes individually.
+
+__profile.raw__
+
+By default, WebJack tries to parse received data into strings. To get the raw data stream as array of bytes, set the `raw` attribute of the profile to `true`:
+
+```js
+var profile = WebJack.Profiles.SoftModem;
+profile.raw = true;
+var connection = new WebJack.Connection(profile);
+``` 
+
+__profile.baud__
+
+The baud-/bitrate. Has to be a factor 44,1kHz and below 1225 bit/s. 
+
+__profile.freqLow__
+
+The frequency of the lower tone, marks a `0` and has to be a multiple of the baudrate.
+
+__profile.freqHigh__
+
+The frequency of the upper tone, marks a `1` and has to be a multiple of the baudrate.
+
+__profile.echoCancellation__
+
+Turn on or off echoCancellation.
+
+__profile.softmodem__
+
+Can be set to `false` for transmissions between browser tabs and possibly helps improving transmission quality.
 
 ## Building
 
