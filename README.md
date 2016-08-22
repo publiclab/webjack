@@ -22,6 +22,10 @@ or
 bower install -S webjack 
 ```
 
+## Dependencies
+WebJack uses the [adapter.js](https://github.com/webrtc/adapter) shim for browser interoperability. You have to make sure adapter.js is loaded before webjack.js. Have a look at the demo site in the examples folder.
+
+jQuery is only used for the demo site and _not_ required for WebJack.
 
 ## Usage
 ```js
@@ -45,14 +49,14 @@ Depending on the profile, WebJack uses different frequencies for the FSK modulat
 | _SoftModemLowFrequencies_ | 1225 bit/s, 2450 and 4900 Hz   | Reduced crosstalk for long cables  |
 | _Browser_                 | 1225 bit/s, 19600 and 20825 Hz | Browser-to-browser transmissions over the air |
 
-For the _SoftModemLowFrequencies_ profile, echo cancellation is activated to reduce feedback produced by crosstalk between wires. Due to the echo cancellation some filters are applied that also reduce the upper frequency limit. Therefore you need to add this definitions to the head of your Arduino sketch, to configure SoftModem for lower frequencies:
+For the **_SoftModemLowFrequencies_** profile, echo cancellation is activated to reduce loopback produced by crosstalk between wires. Due to the echo cancellation some filters are applied that also reduce the upper frequency limit. Therefore you need to add this definitions to the head of your Arduino sketch, to configure SoftModem for lower frequencies:
 ```cpp
 #define SOFT_MODEM_LOW_FREQ    (2450)
 #define SOFT_MODEM_HIGH_FREQ   (4900)
 ```
 __Note:__ _It is recommended to make the cable length as short as possible, before using the non-default profile._
 
-The _Browser_ profile is a planned feature and not working yet. 
+The **_Browser_** profile is a planned feature and not working yet. Its purpose is communication between browser tabs on the same or a different device.
 
 
 ### Individual Profile Options
@@ -82,11 +86,11 @@ The frequency of the upper tone, marks a `1` and has to be a multiple of the bau
 
 __profile.echoCancellation__
 
-Turn on or off echoCancellation.
+Turn on or off echoCancellation. This enables or disables filtering (high-/lowpass) as well.
 
 __profile.softmodem__
 
-Can be set to `false` for transmissions between browser tabs and possibly helps improving transmission quality.
+Set to `false` for transmissions between browser tabs to improve transmission reliability.
 
 ## Building
 
