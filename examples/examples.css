@@ -26,18 +26,29 @@ h2,h3 {
   margin-bottom: .5em;
 }
 
-.send {
+button {
   color: #eee;
-  background-color: #333;
+  background-color: #006266;
   padding: .5em 1em;
   border: none;
   text-decoration: none;
+  border: 1px solid transparent;
 }
-.send:hover{
-  background: #777;
-  color: #ddd;
+button:hover{
+  background: #fff;
+  color: #006266;
+  border: 1px solid #006266;
+}
+button:active{
+  background: #FFCC00;
 }
 
+.hint{
+  font-size: 0.75em;
+}
+li{
+  font-size: 0.75em;
+}
 
 /*@media screen and (min-width: 1000px) {
   body {
