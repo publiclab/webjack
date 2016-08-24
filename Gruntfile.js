@@ -18,7 +18,7 @@ module.exports = function(grunt) {
                     'src/*/*.js',
                     'Gruntfile.js'
                 ],
-                tasks: [ 'wiredep', 'build:js' ]
+                tasks: [ 'build:js' ]
             }
         },
 
@@ -32,15 +32,10 @@ module.exports = function(grunt) {
             }
         },
 
-        wiredep: {
-            task: {
-                src: [
-                  'examples/**/*.html' 
-                ],
-                options: {
-                  // See wiredep's configuration documentation for the options
-                  // you may pass:
-                  // https://github.com/taptapship/wiredep#configuration
+        uglify: {
+            dist: {
+                files: {
+                    'dist/webjack.min.js': ['dist/webjack.js']
                 }
             }
         }
@@ -50,7 +45,7 @@ module.exports = function(grunt) {
     grunt.registerTask('default', ['watch']);
 
     grunt.registerTask('build', [
-        'concat:dist'
+        'concat:dist', 'uglify:dist'
     ]);
 
 };

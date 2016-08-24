@@ -4,6 +4,7 @@
   "description": "A library to connect to an Arduino microcontroller from a website via serial over the audio jack, using WebRTC.",
   "main": "dist/webjack.js",
   "scripts": {
+    "postinstall": "cp node_modules/webrtc-adapter/out/adapter.js examples/ && cp node_modules/jquery/dist/jquery.min.js examples/",
     "test": "tape test/**/*.js"
   },
   "repository": {
@@ -28,12 +29,14 @@
     "grunt": "^1.0.1",
     "grunt-cli": "^1.2.0",
     "grunt-contrib-concat": "^0.5.0",
+    "grunt-contrib-uglify": "^2.0.0",
     "grunt-contrib-watch": "^1.0.0",
-    "grunt-wiredep": "^3.0.1",
+    "jquery": "^3.1.0",
     "matchdep": "^0.3.0",
     "sinon": "^1.17.4",
     "tape": "^3.5.0",
-    "wav-decoder": "^1.1.0"
+    "wav-decoder": "^1.1.0",
+    "webrtc-adapter": "^1.1.0"
   },
   "homepage": "https://github.com/publiclab/webjack#readme"
 }
