@@ -2,27 +2,36 @@
 <html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <meta content="text/html;charset=UTF-8" http-equiv="Content-Type"/>
+  <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
   <title>WebJack</title>
 
-  <!-- bower:js -->
-  <script src="../bower_components/webrtc-adapter/adapter.js"></script>
-  <script src="../bower_components/jquery/dist/jquery.js"></script>
-  <!-- endbower -->
-  <!-- <script src="../node_modules/jquery/dist/jquery.min.js"></script> -->
+  <script src="jquery.min.js"></script>
+  <script src="adapter.js"></script>
+
   <script src="../dist/webjack.js" type="text/javascript"></script>
+  
   <link href="examples.css" rel="stylesheet">
 
 </head>
 <body>
   <h1>WebJack Demo</h1>
-  <a href="https://github.com/publiclab/webjack">WebJack</a> is a JavaScript library that uses an audio modem to communicate with an Arduino µC via headphone jack . No need to install anything.
+  <a href="https://github.com/publiclab/webjack">WebJack</a> is a JavaScript library that uses an audio modem to communicate with an Arduino µC via headphone jack. No need to install anything.
 
-  <h2>Send a command</h2>
-  <textarea class="webjack" placeholder="E.g. enter 'help'"></textarea>
+  <p>Make sure the audio cable is connected and your Arduino is running one of the example sketches. <i>Eventually, crosstalk between signal lines will make sent data appear in the received box</i>.</p>
+
+
+  <textarea class="webjack"></textarea>
   <button class="send">Send</button>
 
   <h3>Received data:</h3>
-  <div class="webjack-log">></div>
+  <div class="webjack-log"></div>
+
+  <p class="hint"><i>WebJack is in an early development stage. If it does not work, try to:</i>
+    <ul>
+      <li>use an other browser <i>(Safari will not work, sorry)</i></li>
+      <li>pump up the volume</li>
+    </ul>
+  </p>
 
   <script>
 
@@ -30,12 +39,20 @@
 
     jQuery(document).ready(function($) {
 
-      connection = new WebJack.Connection();
+      var log = $('.webjack-log');
+      log.apend = function(data){
+        log.append(data)
+        log.append('<br>');
+        log.scrollTop(log[0].scrollHeight);
+      }
 
-      connection.get(function(data) {
-        var log = $('.webjack-log');
-        log.append(data);
-        log.append('<br> >');
+      var profile = WebJack.Profiles[getUrlParameter('profile')]; // https://github.com/publiclab/webjack/blob/master/src/profiles.js
+      console.log('loading profile: ', profile);
+
+      connection = new WebJack.Connection(profile);
+
+      connection.listen(function(data) {
+        log.apend(data);
         console.log('Arduino to WebJack: ' + data);
       });
 
@@ -46,6 +63,23 @@
       });
 
     });
+
+    function getUrlParameter(sParam) {
+
+      var sPageURL = window.location.search.substring(1);
+      var sURLVariables = sPageURL.split('&');
+     
+      for (var i = 0; i < sURLVariables.length; i++) {
+     
+        var sParameterName = sURLVariables[i].split('=');
+     
+        if (sParameterName[0] == sParam) {
+          return sParameterName[1];
+        }
+     
+      }
+
+    }
 
   </script>
 

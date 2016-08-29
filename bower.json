@@ -1,7 +1,7 @@
 {
   "name": "webjack",
   "description": "A library to connect to an Arduino microcontroller from a website via serial over the audio jack, using WebRTC.",
-  "main": "src/webjack.js",
+  "main": "dist/webjack.js",
   "authors": [
     "Public Lab"
   ],
@@ -19,11 +19,8 @@
     "**/.*",
     "node_modules",
     "bower_components",
+    "matlab",
     "test",
     "tests"
-  ],
-  "dependencies": {
-    "webrtc-adapter": "gh-pages",
-    "jquery": "^2.2.4"
-  }
+  ]
 }

@@ -1,35 +1,28 @@
-function softmodem_read(filename, baudrate, freq_l, freq_h, eventlength)
+function softmodem_read(filename, baudrate, freq_l, freq_h)
 	[s, fs] = audioread(filename);
 	%% s → time domain
 	%% y → frequency domain
+
+	%% time before decoding
+	starttime = time;
 
 	%% normalization
 	s = s/max(s); 
 
 	%% window for correlation 
-	windowsize = 16;
+	windowsize = 8;
 
-	data = [];
+	%% demod and decode
+	[corr_diff, corr_low, corr_high] = demod(s, fs, windowsize, freq_l, freq_h, baudrate);
+	data = decode(corr_diff, fs, baudrate);
+	
 
-	if eventlength > 0
-		%% decode in chunks with length = eventlength
-		m = ceil(length(s)/eventlength);
-		l = m*eventlength;
-		s = reshape(resize(s,l,1), eventlength, m);
-
-		state = 1;
-		for n = 1 : 1 : columns(s)
-			[corr_diff, corr_low, corr_high] = demod(s(:,n), fs, windowsize, freq_l, freq_h, baudrate);
-			[data, state] = decodeFrame(corr_diff, fs, data, state, baudrate);
-		end
-	else
-		%% decode all at once
-		[corr_diff, corr_low, corr_high] = demod(s, fs, windowsize, freq_l, freq_h, baudrate);
-		[data, state] = decodeAll(corr_diff, fs, baudrate);
-	end
+	%% time after decoding
+	endttime = time;
 
 	%% result
 	disp(char(data));
+	disp(sprintf('Decoded in %f seconds', endttime -starttime));
 
 	%% plots
 	plots(s, corr_low, corr_high, corr_diff);
@@ -47,39 +40,34 @@ function [event,c_l,c_h] = demod(s, fs, windowsize, f_low, f_high, baud)
 	s_filt = filter(b,a,s);
 	
 	%% correlation with lower and upper frequency
-	%% TODO cyclic prefix and appendix
-	c_l = correlate(s, f_low, fs, windowsize);
-	c_h = correlate(s, f_high, fs, windowsize);
+	c_l = correlate(s_filt, f_low, fs, windowsize);
+	c_h = correlate(s_filt, f_high, fs, windowsize);
 	
 
 	%% difference of the correlations = recovered signal
 	%% filtering signals with f > baudrate
-	cutoff_high = baud/fnyquist;
-	[b,a] = butter(1, cutoff_high);
+	% cutoff_high = baud/fnyquist;
+	% [b,a] = butter(1, cutoff_high);
 	corr_diff = c_h - c_l;
-	corr_diff = filter(b,a, corr_diff);
+	% corr_diff = filter(b,a, corr_diff);	% resulting signal looks better without filtering
 	corr_diff /= max(corr_diff);
 
 	event = corr_diff;
 	% fftplots(s, s_filt, fs);
 end
 
-function [data, state] = decodeAll(s, fs, baud)
-	disp(sprintf('Decoding frame with length %d, baudrate %d:',length(s), baud));
-	data = [];
-	[data, state] = decodeFrame(s,fs, [], 1, baud);
-end
+function data = decode(s, fs, baud)
+	DEBUG = false;
+	disp(sprintf('Decoding frame with length %d:',length(s)));
 
-function [data, state] = decodeFrame(s, fs, partial_data, prev_state, baud)
-	DEBUG = true;
-	FLAG = 1; START = 2; DATA = 3; STOP = 4; PUSH = 5;
+	PREAMBLE = 1; START = 2; DATA = 3; STOP = 4; PUSH = 5;
+	state = 1;
 	
-	data = [partial_data];
-	state = prev_state;
+	data = [];
 
 	samples_per_bit = fs/baud;
-	spb_th_low = samples_per_bit*0.8;
-	max_preamble_spl = 49*samples_per_bit;
+	min_preamble_spls = 10*samples_per_bit; %*0.8;
+	max_preamble_spls = 49*samples_per_bit;
 
 	bit_count = 0;
 	flag_counter = 0;
@@ -88,10 +76,10 @@ function [data, state] = decodeFrame(s, fs, partial_data, prev_state, baud)
 
 	while c < length(s)
 		switch (state)
-			case FLAG
+			case PREAMBLE
 				if s(c) > 0.5
 					flag_counter++;
-				elseif (flag_counter < spb_th_low) || (flag_counter > max_preamble_spl)
+				elseif (flag_counter < min_preamble_spls) || (flag_counter > max_preamble_spls)
 					flag_counter = 0;
 				else
 					state = START;
@@ -100,8 +88,8 @@ function [data, state] = decodeFrame(s, fs, partial_data, prev_state, baud)
 				end
 			case START
 				if DEBUG disp(sprintf('%d START', c)); end
-				if s(c) > 0.5
-					state = FLAG;
+				if s(c) > 0
+					state = PREAMBLE;
 				else
 					state = DATA;
 					byte = 0;
@@ -109,7 +97,7 @@ function [data, state] = decodeFrame(s, fs, partial_data, prev_state, baud)
 				end
 			case DATA
 				if DEBUG disp(sprintf('%d DATA', c)); end
-				bit = int8(s(c) > 0.5);
+				bit = int8(s(c) > 0);
 				byte = bitor(byte, bitshift(bit, bit_count));
 				if bit_count < 7
 					bit_count++;
@@ -120,26 +108,16 @@ function [data, state] = decodeFrame(s, fs, partial_data, prev_state, baud)
 				c += samples_per_bit - 1;
 			case STOP
 				if DEBUG disp(sprintf('%d STOP', c)); end
-				if s(c) > 0.5
+				if s(c) > 0
 					data = [data byte];
-					state = PUSH;
+					state = START;
 				else
-					state = FLAG;
+					state = PREAMBLE;
 				end
 				c += samples_per_bit - 1;
-			case PUSH
-				if DEBUG disp(sprintf('%d PUSH', c)); end
-				if s(c) > 0.5
-					state = FLAG;
-					data = [data 0x0A];
-				else
-					c += floor(samples_per_bit/2) -1;
-					state = START;
-				end
-				c += floor(samples_per_bit/2) - 1;
 			otherwise
 				if DEBUG disp(sprintf('%d OTHER', c)); end
-				state = FLAG;
+				state = PREAMBLE;
 				flag_counter = 0;
 				bit_count = 0;
 				byte = 0;
