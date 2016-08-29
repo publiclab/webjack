@@ -57,7 +57,7 @@
       });
 
       $('.send').click(function () {
-        var text = $('#text').val();
+        var text = $('.webjack').val();
         connection.send(text);
         console.log('WebJack to Arduino: ' + text);
       });
