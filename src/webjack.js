@@ -14,7 +14,7 @@ WebJack.Connection = Class.extend({
     var args = ifUndef(args, WebJack.Profiles.SoftModem);
 	var audioCtx = typeof args.audioCtx === 'undefined' ? new AudioContext() : args.audioCtx;
 
-	var opts = {
+	var opts = connection.options = {
 		sampleRate 		 : audioCtx.sampleRate,
 		baud 			 : ifUndef(args.baud, 1225),
 		freqLow 		 : ifUndef(args.freqLow, 4900),
