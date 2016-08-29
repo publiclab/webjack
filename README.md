@@ -22,7 +22,13 @@ or
 bower install -S webjack 
 ```
 
-## Dependencies
+## Requirements
+__Hardware__
+
+An Arduino Uno or any other ATmega328p based board is required. Future support for other controllers is discussed [here](https://github.com/arms22/SoftModem/issues/5). In addition, it is **_strongly recommended_** to build the circuit (or buy the shield) found at [SoftModem](https://github.com/arms22/SoftModem#hardware).
+
+__Software__
+
 WebJack uses the [adapter.js](https://github.com/webrtc/adapter) shim for browser interoperability. You have to make sure adapter.js is loaded before webjack.js. Have a look at the demo site in the examples folder.
 
 jQuery is only used for the demo site and _not_ required for WebJack.
@@ -91,6 +97,16 @@ Turn on or off echoCancellation. This enables or disables filtering (high-/lowpa
 __profile.softmodem__
 
 Set to `false` for transmissions between browser tabs to improve transmission reliability.
+
+
+## Troubleshooting
+
+If you have problems setting up the connection, you can file an [issue](https://github.com/publiclab/webjack/issues/new). Please include following information:
+
+- Hardware: board, circuit/shield, smartphone
+- Software: Arduino sketch, your webbrowser, used WebJack profiles
+- A recording of the received signal. Please use this [AudioRecorder](https://webaudiodemos.appspot.com/AudioRecorder/index.html).
+- Error messages that occurred
 
 ## Building
 
