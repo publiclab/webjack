@@ -4,18 +4,19 @@ WebJack.Decoder = Class.extend({
 
     var decoder = this;
 
-    var onReceive = args.onReceive;
-    var csvContent = '';
     var DEBUG = args.debug;
+    var csvContent = '';
+    
+    var onReceive = args.onReceive;
+    var raw;
 
-
-    var baud = args.baud;
-    var freqLow = args.freqLow;
-    var freqHigh = args.freqHigh;
     var sampleRate = args.sampleRate;
 
-    var samplesPerBit = Math.ceil(sampleRate/baud);
-    var preambleLength = Math.ceil(sampleRate*40/1000/samplesPerBit);
+    var baud, freqLow, freqHigh;
+    var samplesPerBit, preambleLength;
+
+    var cLowReal, cLowImag, cHighReal, cHighImag;
+    var sinusLow, sinusHigh, cosinusLow, cosinusHigh;
 
     var state = {
       current  : 0,
@@ -34,26 +35,39 @@ WebJack.Decoder = Class.extend({
       c : 0  // counter for the circular correlation arrays
     };
 
-    var cLowReal = new Float32Array(samplesPerBit/2);
-    var cLowImag = new Float32Array(samplesPerBit/2);
-    var cHighReal = new Float32Array(samplesPerBit/2);
-    var cHighImag = new Float32Array(samplesPerBit/2);
+    decoder.setProfile = function(profile) {
+      baud = profile.baud;
+      freqLow = profile.freqLow;
+      freqHigh = profile.freqHigh;
 
-    var sinusLow = new Float32Array(samplesPerBit/2);
-    var sinusHigh = new Float32Array(samplesPerBit/2);
-    var cosinusLow = new Float32Array(samplesPerBit/2);
-    var cosinusHigh = new Float32Array(samplesPerBit/2);
+      samplesPerBit = Math.ceil(sampleRate/baud);
+      preambleLength = Math.ceil(sampleRate*40/1000/samplesPerBit);
 
-    (function initCorrelationArrays(){
-      var phaseIncLow = 2*Math.PI * (freqLow/sampleRate);
-      var phaseIncHigh = 2*Math.PI * (freqHigh/sampleRate);
-      for(var i = 0; i < samplesPerBit/2; i++){
-        sinusLow[i] = Math.sin(phaseIncLow * i);
-        sinusHigh[i] = Math.sin(phaseIncHigh * i);
-        cosinusLow[i] = Math.cos(phaseIncLow * i);
-        cosinusHigh[i] = Math.cos(phaseIncHigh * i);
-      }
-    })();
+
+      cLowReal = new Float32Array(samplesPerBit/2);
+      cLowImag = new Float32Array(samplesPerBit/2);
+      cHighReal = new Float32Array(samplesPerBit/2);
+      cHighImag = new Float32Array(samplesPerBit/2);
+
+      sinusLow = new Float32Array(samplesPerBit/2);
+      sinusHigh = new Float32Array(samplesPerBit/2);
+      cosinusLow = new Float32Array(samplesPerBit/2);
+      cosinusHigh = new Float32Array(samplesPerBit/2);
+
+      (function initCorrelationArrays(){
+        var phaseIncLow = 2*Math.PI * (freqLow/sampleRate);
+        var phaseIncHigh = 2*Math.PI * (freqHigh/sampleRate);
+        for(var i = 0; i < samplesPerBit/2; i++){
+          sinusLow[i] = Math.sin(phaseIncLow * i);
+          sinusHigh[i] = Math.sin(phaseIncHigh * i);
+          cosinusLow[i] = Math.cos(phaseIncLow * i);
+          cosinusHigh[i] = Math.cos(phaseIncHigh * i);
+        }
+      })();
+
+      raw = typeof profile.raw === 'undefined' ? false : profile.raw;
+    }
+    decoder.setProfile(args);
 
 
     function normalize(samples){
@@ -147,7 +161,7 @@ WebJack.Decoder = Class.extend({
       }
       onReceive(word);
     }
-    var emit = args.raw ? onReceive : emitString;
+    var emit = raw ? onReceive : emitString;
 
     decoder.decode = function(samples){
       // start of time measurement

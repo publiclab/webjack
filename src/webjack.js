@@ -140,6 +140,13 @@ WebJack.Connection = Class.extend({
       return object;
     }
 
+    // Set the connection profile
+    connection.setProfile = function(profile) {
+      encoder.setProfile(profile);
+      if (typeof decoder === 'object')
+        decoder.setProfile(profile);
+    }
+
   } 
 
 });

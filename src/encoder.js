@@ -6,35 +6,49 @@ WebJack.Encoder = Class.extend({
 
     var sampleRate = 44100;
     var targetSampleRate = args.sampleRate;
-    // console.log("target sample rate: " + targetSampleRate);
-    var baud = args.baud;
-    var freqLow = args.freqLow;
-    var freqHigh = args.freqHigh;
+    
+    var baud;
+    var freqLow;
+    var freqHigh;
 
-    var samplesPerBit = Math.ceil(sampleRate/baud);
-    var samplesPeriodLow = Math.ceil(sampleRate/freqLow)
-    var samplesPeriodHigh = Math.ceil(sampleRate/freqHigh)
-    // var periodsLowBit = Math.floor(samplesPerBit/samplesPeriodLow);
-    // var periodsHighBit = Math.floor(samplesPerBit/samplesPeriodHigh);
-    // console.log("spb: "+ samplesPerBit);
-    // console.log("periods low: "+ periodsLowBit);
-    // console.log("periods high: "+ samplesPeriodHigh);
+    var samplesPerBit;
+    var preambleLength;
+    var pushbitLength;
 
-    var preambleLength = Math.ceil(sampleRate*40/1000/samplesPerBit);
-    var pushbitLength =  args.softmodem ? 1 : 2;
+    var bitBufferLow;
+    var bitBufferHigh;
 
-    var bitBufferLow = new Float32Array(samplesPerBit);
-    var bitBufferHigh = new Float32Array(samplesPerBit);
+    var rawStream;
+    var softmodem;
 
-    (function generateBitBuffers(){
-      var phaseIncLow = 2 * Math.PI * freqLow / sampleRate;
-      var phaseIncHigh = 2 * Math.PI * freqHigh / sampleRate;
-      
-      for (var i=0; i < samplesPerBit; i++) {
-        bitBufferLow.set( [Math.cos(phaseIncLow*i)], i);
-        bitBufferHigh.set( [Math.cos(phaseIncHigh*i)], i);
-      }
-    })();
+    encoder.setProfile = function(profile){
+
+      baud = profile.baud;
+      freqLow = profile.freqLow;
+      freqHigh = profile.freqHigh;
+
+      samplesPerBit = Math.ceil(sampleRate/baud);
+      preambleLength = Math.ceil(sampleRate*40/1000/samplesPerBit);
+      pushbitLength =  profile.softmodem ? 1 : 2;
+
+      bitBufferLow = new Float32Array(samplesPerBit);
+      bitBufferHigh = new Float32Array(samplesPerBit);
+
+      rawStream = typeof profile.raw === 'undefined' ? false : profile.raw;      
+      softmodem = profile.softmodem;
+
+      (function generateBitBuffers(){
+        var phaseIncLow = 2 * Math.PI * freqLow / sampleRate;
+        var phaseIncHigh = 2 * Math.PI * freqHigh / sampleRate;
+        
+        for (var i=0; i < samplesPerBit; i++) {
+          bitBufferLow.set( [Math.cos(phaseIncLow*i)], i);
+          bitBufferHigh.set( [Math.cos(phaseIncHigh*i)], i);
+        }
+      })();
+      console.log("new encoder profile: ",  profile);
+    }
+    encoder.setProfile(args);
 
     function toUTF8(str) {
       var utf8 = [];
@@ -62,7 +76,7 @@ WebJack.Encoder = Class.extend({
     }
 
     encoder.modulate = function(data){
-      var uint8 = args.raw ? data : toUTF8(data);
+      var uint8 = rawStream ? data : toUTF8(data);
       var bufferLength = (preambleLength + 10*(uint8.length) + pushbitLength)*samplesPerBit;
       var samples = new Float32Array(bufferLength);
 
@@ -81,7 +95,7 @@ WebJack.Encoder = Class.extend({
           pushBits( c&1, 1);
       }
       pushBits(1, 1);
-      if (!args.softmodem)
+      if (!softmodem)
         pushBits(0, 1);
 
       if (args.debug) console.log("gen. audio length: " +samples.length);
