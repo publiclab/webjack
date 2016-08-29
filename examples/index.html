@@ -46,7 +46,10 @@
         log.scrollTop(log[0].scrollHeight);
       }
 
-      connection = new WebJack.Connection();
+      var profile = WebJack.Profiles[getUrlParameter('profile')]; // https://github.com/publiclab/webjack/blob/master/src/profiles.js
+      console.log('loading profile: ', profile);
+
+      connection = new WebJack.Connection(profile);
 
       connection.listen(function(data) {
         log.apend(data);
@@ -60,6 +63,23 @@
       });
 
     });
+
+    function getUrlParameter(sParam) {
+
+      var sPageURL = window.location.search.substring(1);
+      var sURLVariables = sPageURL.split('&');
+     
+      for (var i = 0; i < sURLVariables.length; i++) {
+     
+        var sParameterName = sURLVariables[i].split('=');
+     
+        if (sParameterName[0] == sParam) {
+          return sParameterName[1];
+        }
+     
+      }
+
+    }
 
   </script>
 

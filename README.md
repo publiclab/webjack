@@ -49,11 +49,11 @@ connection.send('some data');
 Depending on the profile, WebJack uses different frequencies for the FSK modulation.
 
 
-|  Profile                  | Parameters                     | Use Case |
-|---------------------------|--------------------------------|----------|
-| _SoftModem_ (default)     | 1225 bit/s, 4900 and 7350 Hz   | Communication with the SoftModem Arduino library    |
-| _SoftModemLowFrequencies_ | 1225 bit/s, 2450 and 4900 Hz   | Reduced crosstalk for long cables  |
-| _Browser_                 | 1225 bit/s, 19600 and 20825 Hz | Browser-to-browser transmissions over the air |
+|  Profile                  | Parameters                     | Use Case | Demo |
+|---------------------------|--------------------------------|----------|------|
+| _SoftModem_ (default)     | 1225 bit/s, 4900 and 7350 Hz   | Communication with the SoftModem Arduino library | [Demo](https://publiclab.github.io/webjack/examples/) | 
+| _SoftModemLowFrequencies_ | 1225 bit/s, 2450 and 4900 Hz   | Reduced crosstalk for long cables | [Demo](https://publiclab.github.io/webjack/examples/?profile=SoftModemLowFrequencies) |
+| _Browser_                 | 1225 bit/s, 19600 and 20825 Hz | Browser-to-browser transmissions over the air | [Demo](https://publiclab.github.io/webjack/examples/?profile=Browser) |
 
 For the **_SoftModemLowFrequencies_** profile, echo cancellation is activated to reduce loopback produced by crosstalk between wires. Due to the echo cancellation some filters are applied that also reduce the upper frequency limit. Therefore you need to add this definitions to the head of your Arduino sketch, to configure SoftModem for lower frequencies:
 ```cpp
