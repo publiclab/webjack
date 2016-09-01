@@ -17,13 +17,17 @@
   <h1>WebJack Demo</h1>
   <a href="https://github.com/publiclab/webjack">WebJack</a> is a JavaScript library that uses an audio modem to communicate with an Arduino µC via headphone jack. No need to install anything.
 
-  <p>Make sure the audio cable is connected and your Arduino is running one of the example sketches. <i>Eventually, crosstalk between signal lines will make sent data appear in the received box</i>.</p>
+  <p>Make sure the audio cable is connected and your Arduino is running one of the example sketches. <i>Eventually, crosstalk between signal lines will make sent data appear as received data</i>.</p>
 
-
-  <textarea class="webjack"></textarea>
+  <input type="text" class="userinput">
   <button class="send">Send</button>
 
-  <h3>Received data:</h3>
+  <select id="prof" onchange="changeProfile(this.value)">
+    <option value="0">SoftModem</option>
+    <option value="1">LowFrequencies</option>
+    <option value="2">Browser</option>
+  </select>
+
   <div class="webjack-log"></div>
 
   <p class="hint"><i>WebJack is in an early development stage. If it does not work, try to:</i>
@@ -34,6 +38,7 @@
   </p>
 
   <script>
+
 
     var connection;
 
@@ -57,7 +62,7 @@
       });
 
       $('.send').click(function () {
-        var text = $('.webjack').val();
+        var text = $('.userinput').val();
         connection.send(text);
         console.log('WebJack to Arduino: ' + text);
       });
@@ -79,6 +84,23 @@
      
       }
 
+    }
+
+    function changeProfile(p){
+      var profile = WebJack.Profiles.SoftModem;
+
+      switch (p){
+        case "0":
+          profile = WebJack.Profiles.SoftModem;
+          break;
+        case "1":
+          profile = WebJack.Profiles.SoftModemLowFrequencies;
+          break;
+        case "2":
+          profile = WebJack.Profiles.Browser;
+          break;
+      }
+      connection.setProfile(profile);
     }
 
   </script>
