@@ -1,0 +1,204 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">                                                                                         
+<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta content="text/html;charset=UTF-8" http-equiv="Content-Type"/>
+  <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+  <title>WebJack</title>
+
+  <script src="jquery.min.js"></script>
+  <script src="adapter.js"></script>
+
+  <script src="../dist/webjack.js" type="text/javascript"></script>
+  
+  <script src="../rickshaw/d3.v3.js"></script>
+	<script src="../rickshaw/rickshaw.js"></script>
+		<link type="text/css" rel="stylesheet" href="../rickshaw/graph.css">
+	<link type="text/css" rel="stylesheet" href="../rickshaw/detail.css">
+	<link type="text/css" rel="stylesheet" href="../rickshaw/legend.css">
+	<link type="text/css" rel="stylesheet" href="../extensions.css">
+	
+	
+  <link href="examples.css" rel="stylesheet">
+<style>
+#chart_container {
+        position: relative;
+        font-family: Arial, Helvetica, sans-serif;
+}
+#chart {
+        position: relative;
+        left: 40px;
+}
+#y_axis {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 40px;
+}
+</style>
+
+</head>
+<body>
+  
+   <h1>Loadcell Demo</h1>
+
+  <p>Use with sketch <a href="https://gist.github.com/dwblair/705b71296556c8a407e7eca7582c3ad5">webjack_loadcell.ino</a>.</p>
+     
+<div id="chart_container">
+        <div id="y_axis"></div>
+        <div id="chart"></div>
+</div>
+
+     <h3 id="readout">Loadcell Demo</h3>
+     
+<p>Scale Factor (lbs / input unit):</p>
+<p id="scale_factor">1.</p>
+
+<p>New calibration weight (lbs):</p>
+<input type="text" id="weight" value="10">
+ <button id="set">Set</button>
+
+<p>
+<p>
+
+  <select id="prof" onchange="changeProfile(this.value)">
+    <option value="0">SoftModem</option>
+    <option value="1">LowFrequencies</option>
+    <option value="2">Browser</option>
+  </select>
+
+<div class="webjack-log"></div>
+
+  <p class="hint">Uses <a href="https://github.com/publiclab/webjack">WebJack</a> is a JavaScript library that uses an audio modem to communicate with an Arduino µC via headphone jack.
+  </p>
+  
+
+  <script>
+
+    
+    var scaleFactor=1.;
+    var currentRaw=1.;
+    var calibrationWeight=1.;
+    var maxGraph=100.;
+    var units="lbs";
+    
+    var connection;
+
+    jQuery(document).ready(function($) {
+
+// set the weight
+    $( "#set" ).click(function() {
+  //var text = $( this ).text();
+   calibrationWeight=$("#weight").val();
+  scaleFactor=parseFloat(calibrationWeight/currentRaw);
+  //maxGraph=5*parseFloat(calibrationWeight);  // doesn't work?
+  $( "#scale_factor" ).text(scaleFactor); 
+});
+
+
+      var log = $('.webjack-log');
+      log.apend = function(data){
+        log.append(data)
+        log.append('<br>');
+        log.scrollTop(log[0].scrollHeight);
+      }
+
+      var profile = WebJack.Profiles[getUrlParameter('profile')];
+      
+      console.log('loading profile: ', profile);
+      
+      connection = new WebJack.Connection(profile);
+
+      connection.listen(function(data) {
+        log.apend(data);
+        
+        var value = parseFloat(data)*scaleFactor;
+                
+        if (isNaN(value)==false) {
+        
+        currentRaw=value;
+        
+        $('#readout').text(currentRaw.toFixed(2));
+        
+        var datum = {one: value};
+
+	graph.series.addData(datum);
+	graph.render();
+	}
+	
+        console.log('Arduino to WebJack: ' + data);
+      });
+
+      $('.send').click(function () {
+        var text = $('.userinput').val();
+       // connection.send(text);
+        console.log('WebJack to Arduino: ' + text);
+      });
+
+    });
+
+    function getUrlParameter(sParam) {
+
+      var sPageURL = window.location.search.substring(1);
+      var sURLVariables = sPageURL.split('&');
+     
+      for (var i = 0; i < sURLVariables.length; i++) {
+     
+        var sParameterName = sURLVariables[i].split('=');
+     
+        if (sParameterName[0] == sParam) {
+          return sParameterName[1];
+        }
+     
+      }
+
+    }
+
+    function changeProfile(p){
+      var profile = WebJack.Profiles.SoftModem;
+
+      switch (p){
+        case "0":
+          profile = WebJack.Profiles.SoftModem;
+          break;
+        case "1":
+          profile = WebJack.Profiles.SoftModemLowFrequencies;
+          break;
+        case "2":
+          profile = WebJack.Profiles.Browser;
+          break;
+      }
+      connection.setProfile(profile);
+    }
+
+
+var tv = 100;
+
+var graph = new Rickshaw.Graph( {
+	element: document.getElementById("chart"),
+	width: 300,
+	height: 100,
+	renderer: 'line',
+	max:maxGraph,
+	min:-10,
+	series: new Rickshaw.Series.FixedDuration([{ name: 'one' }], undefined, {
+		timeInterval: tv,
+		maxDataPoints: 100,
+		color: 'steelblue',
+		timeBase: new Date().getTime() / 1000
+	}) 
+} );
+
+var y_ticks = new Rickshaw.Graph.Axis.Y( {
+	graph: graph,
+	orientation: 'left',
+
+	tickFormat: Rickshaw.Fixtures.Number.formatKMBT,
+	  tickValues: [0,25,50,75,100], // values to use/display
+	element: document.getElementById('y_axis')
+} );
+
+
+  </script>
+
+</body>
+</html>
