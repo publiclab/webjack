@@ -76,23 +76,19 @@
         log.scrollTop(log[0].scrollHeight);
       }
 
-      var profile = WebJack.Profiles[getUrlParameter('profile')]; // https://github.com/publiclab/webjack/blob/master/src/profiles.js
-      console.log('loading profile: ', profile);
-
+      var profile = WebJack.Profiles[getUrlParameter('profile')];
       
+      console.log('loading profile: ', profile);
       
       connection = new WebJack.Connection(profile);
 
       connection.listen(function(data) {
         log.apend(data);
         
-        //graph the data
         var value = parseFloat(data);
         
         if (isNaN(value)==false) {
         var datum = {one: value};
-        
-        //log.append(value);
 
 	graph.series.addData(datum);
 	graph.render();
@@ -146,16 +142,12 @@
 
 var tv = 100;
 
-// instantiate our graph!
-
-// https://github.com/shutterstock/rickshaw#rickshawgraph
-
 var graph = new Rickshaw.Graph( {
 	element: document.getElementById("chart"),
-	width: 700,
-	height: 400,
+	width: 300,
+	height: 100,
 	renderer: 'line',
-	max:200,
+	max:100,
 	min:-10,
 	series: new Rickshaw.Series.FixedDuration([{ name: 'one' }], undefined, {
 		timeInterval: tv,
@@ -170,22 +162,9 @@ var y_ticks = new Rickshaw.Graph.Axis.Y( {
 	orientation: 'left',
 
 	tickFormat: Rickshaw.Fixtures.Number.formatKMBT,
-	  tickValues: [-10,0,20,40,60,80,100,120,140,160,180,200], // values to use/display
+	  tickValues: [0,25,50,75,100], // values to use/display
 	element: document.getElementById('y_axis')
 } );
-
-graph.render();
-
-var y_axis = new Rickshaw.Graph.Axis.Y( {
-        graph: graph,
-        orientation: 'left',
-        	color: 'steelblue',
-        tickFormat: Rickshaw.Fixtures.Number.formatKMBT,
-        element: document.getElementById('y_axis'),
-} );
-
-yAxis.render();
-
 
 
   </script>
