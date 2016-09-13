@@ -19,6 +19,22 @@
 	
 	
   <link href="examples.css" rel="stylesheet">
+<style>
+#chart_container {
+        position: relative;
+        font-family: Arial, Helvetica, sans-serif;
+}
+#chart {
+        position: relative;
+        left: 40px;
+}
+#y_axis {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 40px;
+}
+</style>
 
 </head>
 <body>
@@ -28,10 +44,11 @@
   <p>Use with sketch <a href="https://gist.github.com/dwblair/705b71296556c8a407e7eca7582c3ad5">webjack_loadcell.ino</a>.</p>
   
   
-  
-<div id="content">
-	<div id="chart" class="rickshaw_graph"></div>
+<div id="chart_container">
+        <div id="y_axis"></div>
+        <div id="chart"></div>
 </div>
+
 
   <select id="prof" onchange="changeProfile(this.value)">
     <option value="0">SoftModem</option>
@@ -143,6 +160,7 @@ var graph = new Rickshaw.Graph( {
 	series: new Rickshaw.Series.FixedDuration([{ name: 'one' }], undefined, {
 		timeInterval: tv,
 		maxDataPoints: 100,
+		color: 'steelblue',
 		timeBase: new Date().getTime() / 1000
 	}) 
 } );
@@ -150,12 +168,21 @@ var graph = new Rickshaw.Graph( {
 var y_ticks = new Rickshaw.Graph.Axis.Y( {
 	graph: graph,
 	orientation: 'left',
+
 	tickFormat: Rickshaw.Fixtures.Number.formatKMBT,
 	  tickValues: [-10,0,20,40,60,80,100,120,140,160,180,200], // values to use/display
 	element: document.getElementById('y_axis')
 } );
 
 graph.render();
+
+var y_axis = new Rickshaw.Graph.Axis.Y( {
+        graph: graph,
+        orientation: 'left',
+        	color: 'steelblue',
+        tickFormat: Rickshaw.Fixtures.Number.formatKMBT,
+        element: document.getElementById('y_axis'),
+} );
 
 yAxis.render();
 
