@@ -20,6 +20,27 @@
 	
   <link href="examples.css" rel="stylesheet">
 
+<style>
+#chart_container {
+        position: relative;
+        font-family: Arial, Helvetica, sans-serif;
+}
+#chart {
+        position: relative;
+        left: 40px;
+}
+#y_axis {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 40px;
+}
+   
+#readout {display:inline-block;margin-right:10px;}
+#units {display:inline-block;} 
+
+</style>
+
 </head>
 <body>
   
@@ -33,6 +54,12 @@
 	<div id="chart" class="rickshaw_graph"></div>
 </div>
 
+<div id="chart_container">
+     <h1 id="readout">0.</h1>
+     <!--<h1 id="units">lbs</h1>-->
+     </div>
+     
+     
   <select id="prof" onchange="changeProfile(this.value)">
     <option value="0">SoftModem</option>
     <option value="1">LowFrequencies</option>
@@ -60,8 +87,6 @@
       var profile = WebJack.Profiles[getUrlParameter('profile')]; // https://github.com/publiclab/webjack/blob/master/src/profiles.js
       console.log('loading profile: ', profile);
 
-      
-      
       connection = new WebJack.Connection(profile);
 
       connection.listen(function(data) {
@@ -73,7 +98,7 @@
         if (isNaN(value)==false) {
         var datum = {one: value};
         
-        //log.append(value);
+        $('#readout').text(value.toFixed(2));
 
 	graph.series.addData(datum);
 	graph.render();
