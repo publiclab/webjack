@@ -98,6 +98,15 @@ __profile.softmodem__
 
 Set to `false` for transmissions between browser tabs to improve transmission reliability.
 
+## Plotting
+
+If you are receiving sensor data, you can plot a graph of incoming values [in the plotter example](https://publiclab.github.io/webjack/examples/plotter/).
+Test it out even without a sensor, by playing audio from [this YouTube video of WebJack-transmitted sensor data](https://www.youtube.com/watch?v=GtJW1Dlt3cg) out loud into the microphone while viewing the above demo. 
+
+![plotted data](https://i.publiclab.org/system/images/photos/000/018/056/medium/Screenshot_2016-09-16_at_11.43.26_AM.png)
+
+
+****
 
 ## Troubleshooting
 
