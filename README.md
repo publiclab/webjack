@@ -122,11 +122,12 @@ Follow this diagram (and the cable pinouts guide below) to connect an audio cabl
 Most smartphones have a 4-pin combined microphone/stereo headphone port which takes a 3.5mm plug, but there are unfortunately different standards for which plug positions (from tip to sleeve) correspond to which wires, and there's no guarantee that the wires are colored helpfully. The best way to test a cable you're using is to use a multimeter, or to light up an LED using different pin/wire combinations to see what wire corresponds to what pin. 
 
 | Pin # | Position | OMTP AV connector | AHJ AV connector |
+|-------|----------|-------------------|------------------|
 | 1 | sleeve | Ground | Microphone |
 | 2 | ring | Microphone | Ground |
 | 3 | ring | Right audio | Right audio |
 | 4 | tip | Left audio | Left audio |
-| **Devices:** | Samsung,older Sony Ericsson and Nokia | HTC, recent Sony and Nokia, Apple |
+|   | **Devices:** | Samsung,older Sony Ericsson and Nokia | HTC, recent Sony and Nokia, Apple |
 
 3.5mm to RCA AV cables (to red/white/yellow "TV-style" plugs) vary: [see this listing for various pinouts](http://pinoutsguide.com/Home/av_jack_pinout.shtml), and note that the wires inside your cable may be labelled with the convention of `red:right`, `white:left`, and `yellow:video`. The ground wires may be wrapped **around** each of those three wires, which provides shielding from interference.
 
