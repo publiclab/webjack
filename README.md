@@ -115,7 +115,7 @@ Test it out even without a sensor, by playing audio from [this YouTube video of 
 
 Follow this diagram (and the cable pinouts guide below) to connect an audio cable to your Arduino in the right way for your smartphone or laptop:
 
-![arduino-diagram.png](https//i.publiclab.org/system/images/photos/000/018/092/large/arduino-diagram.png)
+![arduino-diagram.png](https://i.publiclab.org/system/images/photos/000/018/092/large/arduino-diagram.png)
 
 ### Cable pinouts
 
