@@ -27,6 +27,8 @@ __Hardware__
 
 An Arduino Uno or any other ATmega328p based board is required. Future support for other controllers is discussed [here](https://github.com/arms22/SoftModem/issues/5). In addition, it is **_strongly recommended_** to build the circuit (or buy the shield) found at [SoftModem](https://github.com/arms22/SoftModem#hardware).
 
+The Arduino can be connected to a laptop or smartphone with the correct cable, but different laptops and smartphones require different cables. See [Hardware](#hardware), below. 
+
 __Software__
 
 WebJack uses the [adapter.js](https://github.com/webrtc/adapter) shim for browser interoperability. You have to make sure adapter.js is loaded before webjack.js. Have a look at the demo site in the examples folder.
@@ -104,6 +106,29 @@ If you are receiving sensor data, you can plot a graph of incoming values [in th
 Test it out even without a sensor, by playing audio from [this YouTube video of WebJack-transmitted sensor data](https://www.youtube.com/watch?v=GtJW1Dlt3cg) out loud into the microphone while viewing the above demo. 
 
 ![plotted data](https://i.publiclab.org/system/images/photos/000/018/056/medium/Screenshot_2016-09-16_at_11.43.26_AM.png)
+
+****
+
+## Hardware
+
+### Arduino wiring
+
+Follow this diagram (and the cable pinouts guide below) to connect an audio cable to your Arduino in the right way for your smartphone or laptop:
+
+![arduino-diagram.png](https://publiclab.github.io/webjack/arduino-diagram.png)
+
+### Cable pinouts
+
+Most smartphones have a 4-pin combined microphone/stereo headphone port which takes a 3.5mm plug, but there are unfortunately different standards for which plug positions (from tip to sleeve) correspond to which wires, and there's no guarantee that the wires are colored helpfully. The best way to test a cable you're using is to use a multimeter, or to light up an LED using different pin/wire combinations to see what wire corresponds to what pin. 
+
+| Pin # | Position | OMTP AV connector | AHJ AV connector |
+| 1 | sleeve | Ground | Microphone |
+| 2 | ring | Microphone | Ground |
+| 3 | ring | Right audio | Right audio |
+| 4 | tip | Left audio | Left audio |
+| **Devices:** | Samsung,older Sony Ericsson and Nokia | HTC, recent Sony and Nokia, Apple |
+
+3.5mm to RCA AV cables (to red/white/yellow "TV-style" plugs) vary: [see this listing for various pinouts](http://pinoutsguide.com/Home/av_jack_pinout.shtml), and note that the wires inside your cable may be labelled with the convention of `red:right`, `white:left`, and `yellow:video`. The ground wires may be wrapped **around** each of those three wires, which provides shielding from interference.
 
 
 ****
