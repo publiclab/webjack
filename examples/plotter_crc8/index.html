@@ -1,0 +1,210 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">                                                                                         
+<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta content="text/html;charset=UTF-8" http-equiv="Content-Type"/>
+  <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+  <title>WebJack</title>
+
+  <script src="../jquery.min.js"></script>
+  <script src="../adapter.js"></script>
+
+  <script src="../../dist/webjack.js" type="text/javascript"></script>
+  
+  <script src="rickshaw/d3.v3.js"></script>
+  <script src="rickshaw/rickshaw.js"></script>
+
+
+ <script src="crc8/crc8.js"></script>
+
+  <link type="text/css" rel="stylesheet" href="rickshaw/graph.css">
+  <link type="text/css" rel="stylesheet" href="rickshaw/detail.css">
+  <link type="text/css" rel="stylesheet" href="rickshaw/legend.css">
+  <link type="text/css" rel="stylesheet" href="rickshaw/extensions.css">
+
+  <link type="text/css" rel="stylesheet" href="../examples.css" />
+
+
+  <style>
+    #chart_container {
+      position: relative;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+    #chart {
+      position: relative;
+      left: 40px;
+    }
+    #y_axis {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 40px;
+    }
+    #readout {
+      display:inline-block;
+      margin-right:10px;
+    }
+    #units {
+      display:inline-block;
+    }
+  </style>
+
+</head>
+<body>
+  
+  <h1>WebJack Sensor Plotting Demo</h1>
+  <a href="https://github.com/publiclab/webjack">WebJack</a> is a JavaScript library that uses an audio modem to communicate with an Arduino µC via headphone jack. No need to install anything.
+
+  <p>Note: in order to have a value plotted on the graph, it must be a single, valid number -- like "32.5".  The graph is set to scale the y-axis automatically.</p>
+
+  <p>
+    Profile: 
+    <select id="prof" onchange="changeProfile(this.value)">
+      <option value="0">SoftModem</option>
+      <option value="1">LowFrequencies</option>
+      <option value="2">Browser</option>
+    </select>
+  </p>
+
+  <div id="content">
+    <div id="chart" class="rickshaw_graph"></div>
+  </div>
+
+  <div id="chart_container">
+    <h1 id="readout">0.</h1>
+  </div>
+
+  <div class="webjack-log"></div>
+
+
+  <script>
+
+
+    var connection;
+
+    jQuery(document).ready(function($) {
+
+      var log = $('.webjack-log');
+      log.apend = function(data){
+        log.append(data)
+        log.append('<br>');
+        log.scrollTop(log[0].scrollHeight);
+      }
+
+      var profile = WebJack.Profiles[getUrlParameter('profile')]; // https://github.com/publiclab/webjack/blob/master/src/profiles.js
+      console.log('loading profile: ', profile);
+
+      connection = new WebJack.Connection(profile);
+
+      connection.listen(function(data) {
+
+	// parse the input data into message + checksum
+        var str = data;
+        var res = str.split("%");
+        var msg = res[0];
+	var checksum_input= res[1];
+
+        log.apend(data);
+
+	//log.apend(checksum_input);
+
+
+	 // convert msg into array of bytes and then calculate checksum from it
+  	var msg_byte_array = msg.split('').map(function(x){return x.charCodeAt(0)});
+	var crc8 = new CRC8();
+	var checksum = crc8.checksum(msg_byte_array);
+
+
+	if(checksum_input==checksum) {
+
+		//graph the data if it's a float
+		var value = parseFloat(msg);
+
+		if (isNaN(value)==false) {
+			var datum = {one: value};
+
+			$('#readout').text(value.toFixed(2));
+
+
+
+			graph.series.addData(datum);
+			graph.render();
+	  	}
+	}
+  
+        console.log('Arduino to WebJack: ' + data);
+      });
+
+      $('.send').click(function () {
+        var text = $('.userinput').val();
+        connection.send(text);
+        console.log('WebJack to Arduino: ' + text);
+      });
+
+    });
+
+    function getUrlParameter(sParam) {
+
+      var sPageURL = window.location.search.substring(1);
+      var sURLVariables = sPageURL.split('&');
+     
+      for (var i = 0; i < sURLVariables.length; i++) {
+     
+        var sParameterName = sURLVariables[i].split('=');
+     
+        if (sParameterName[0] == sParam) {
+          return sParameterName[1];
+        }
+     
+      }
+
+    }
+
+    function changeProfile(p){
+      var profile = WebJack.Profiles.SoftModem;
+
+      switch (p){
+        case "0":
+          profile = WebJack.Profiles.SoftModem;
+          break;
+        case "1":
+          profile = WebJack.Profiles.SoftModemLowFrequencies;
+          break;
+        case "2":
+          profile = WebJack.Profiles.Browser;
+          break;
+      }
+      connection.setProfile(profile);
+    }
+
+
+    // instantiate our graph using rickshaw
+    // https://github.com/shutterstock/rickshaw#rickshawgraph
+    
+    var graph = new Rickshaw.Graph( {
+      element: document.getElementById("chart"),
+      width: 700,
+      height: 500,
+      renderer: 'line',
+      max:45,
+      series: new Rickshaw.Series.FixedDuration([{ name: 'one' }], undefined, {
+        timeInterval: 100,
+        maxDataPoints: 100,
+        timeBase: new Date().getTime() / 1000
+      }) 
+    } );
+
+    var y_ticks = new Rickshaw.Graph.Axis.Y( {
+      graph: graph,
+      orientation: 'left',
+      tickFormat: Rickshaw.Fixtures.Number.formatKMBT,
+       ticks: 8,
+      // tickValues: [5,10,15,20,25,30,35,40,45], // values to use/display
+      element: document.getElementById('y_axis')
+    } );
+    
+    graph.render();
+    
+  </script>
+
+</body>
+</html>
