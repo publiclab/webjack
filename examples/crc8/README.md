@@ -6,4 +6,5 @@ Adds a [Cyclic redundancy check](https://en.wikipedia.org/wiki/Cyclic_redundancy
 
 Using it requires installing the <a href="">crc8 library</a> 'sketchbook/libraries' folder of your Arduino IDE.  (This library can also be found under 'examples/crc8/microcontroller' in this repository.)
 
+Based on mode80's crc8js [javascript CRC8 generator](https://github.com/mode80/crc8js), and the BARR Group's [tutorial for generating CRC8 in C++](http://www.barrgroup.com/Embedded-Systems/How-To/CRC-Calculation-C-Code).
 
