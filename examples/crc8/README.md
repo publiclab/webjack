@@ -10,7 +10,7 @@ The browser receives the message and checksum, calculates the checksum independe
 
 # Using it
 
-- Install the 'crc8' library from 'microcontroller/library' in the 'sketchbook/libraries' folder of your Arduino IDE.
-- Navigate to 'index.html' in the 'browser' library.
+- Install the 'crc8' library from the 'microcontroller/library' folder above in the 'sketchbook/libraries' folder of your Arduino IDE.
+- Navigate to 'index.html' in the 'browser' library above.
 
 
