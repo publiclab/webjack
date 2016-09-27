@@ -1,6 +1,6 @@
 # CRC8
 
-<img src=pics/demo.png>
+<img src=demo.png>
 
 Adds a [Cyclic redundancy check](https://en.wikipedia.org/wiki/Cyclic_redundancy_check) -- a common error detection code -- to WebJack, in order to identify (and reject) messages that have been corrupted by noise. The Arduino calculates a single-byte 'checksum' for each message to be sent to WebJack, and appends it to the message. The browser receives the message and checksum, calculates the checksum independently, and rejects the message if the two checksums don't match.
 
