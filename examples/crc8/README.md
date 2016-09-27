@@ -1,7 +1,8 @@
-
-Adds [Cyclic redundancy check](https://en.wikipedia.org/wiki/Cyclic_redundancy_check) functionality -- a common error detection code -- to WebJack.
-
 # Background
+
+Adds [Cyclic redundancy check](https://en.wikipedia.org/wiki/Cyclic_redundancy_check) functionality -- a common error detection code -- to WebJack, in order to identify (and reject) messages that have been corrupted by noise.
+
+# How it works
 
 The Arduino calculates a single-byte 'checksum' for each message to be sent to WebJack, and appends it to the message. 
 
