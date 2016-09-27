@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>CRC</title>
+  <script src="crc8.js"></script>
+</head>
+<body>
+
+<script>
+
+  var sample_text = "hello"
+
+  // convert sample text to array of bytes
+  var byte_array = sample_text.split('').map(function(x){return x.charCodeAt(0)})
+
+  var crc8 = new CRC8()
+
+  var checksum = crc8.checksum(byte_array)
+
+  console.log(sample_text);
+  console.log(checksum);
+
+</script>
+
+
+
+<!--
+<script>
+var output = crc32('The quick brown fox jumps over the lazy dog');
+var answer = '414fa339';
+console.log('results:');
+console.log(output);
+console.log(answer);
+</script>
+-->
+
+</body>
+</html>
