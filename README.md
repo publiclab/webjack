@@ -7,6 +7,9 @@ WebJack is a JavaScript library that uses [SoftModem](https://github.com/arms22/
 
 Try it out in this live demo: https://publiclab.github.io/webjack/examples/
 
+Also see [webjack-firmata](https://github.com/publiclab/webjack-firmata), which builds on `webjack` to provide a browser-based hardware interface for [firmata.js](https://github.com/firmata/firmata.js).
+
+
 ## Installation
 
 1. If not already done, install the SoftModem Arduino library:
