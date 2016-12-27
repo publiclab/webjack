@@ -25,14 +25,18 @@
 
   <p>Make sure the audio cable is connected and your Arduino is running one of the example sketches. <i>Eventually, crosstalk between signal lines will make sent data appear as received data</i>.</p>
 
-  <input type="text" class="userinput">
-  <button class="send">Send</button>
+  <p>
+    <form class="sendForm" style="display:inline;">
+      <input type="text" class="userinput">
+    </form>
+    <button class="send">Send</button>
 
-  <select id="prof" onchange="changeProfile(this.value)">
-    <option value="0">SoftModem</option>
-    <option value="1">LowFrequencies</option>
-    <option value="2">Browser</option>
-  </select>
+    <select id="prof" onchange="changeProfile(this.value)">
+      <option value="0">SoftModem</option>
+      <option value="1">LowFrequencies</option>
+      <option value="2">Browser</option>
+    </select>
+  </p>
 
   <div class="webjack-log"></div>
 
@@ -69,43 +73,43 @@
         var str = data;
         var res = str.split("%");
         var msg = res[0];
-	var checksum_input= res[1];
+        var checksum_input= res[1];
 
         // convert msg into array of bytes and then calculate checksum from it
-  	var msg_byte_array = msg.split('').map(function(x){return x.charCodeAt(0)})
-	var crc8 = new CRC8()
-	var checksum = crc8.checksum(msg_byte_array)
+        var msg_byte_array = msg.split('').map(function(x){return x.charCodeAt(0)})
+        var crc8 = new CRC8()
+        var checksum = crc8.checksum(msg_byte_array)
 
         log.append(data);
-	log.append(" msg:");
+        log.append(" msg:");
         log.append(msg);
-	log.append(" crc_in:");
-	log.append(checksum_input);
-	log.append(" crc_calc:");
-	log.append(checksum);
-	
-	if(checksum_input==checksum) {
-		log.apend(" --> match!");
-	}
-	else {
-		log.append(" --> NOISE");
-		log.append(" --> NOISE");
-		log.apend(" --> NOISE");
-	}
-
-
-
+        log.append(" crc_in:");
+        log.append(checksum_input);
+        log.append(" crc_calc:");
+        log.append(checksum);
+        
+        if(checksum_input==checksum) {
+          log.apend(" --> match!");
+        } else {
+          log.append(" --> NOISE");
+          log.append(" --> NOISE");
+          log.append(" --> NOISE");
+        }
 
         console.log('Arduino to WebJack: ' + data);
 
-
       });
 
-      $('.send').click(function () {
+      function send(e) {
+        e.preventDefault();
         var text = $('.userinput').val();
         connection.send(text);
         console.log('WebJack to Arduino: ' + text);
-      });
+        return false;
+      }
+
+      $('.send').click(send);
+      $('.sendForm').submit(send);
 
     });
 
