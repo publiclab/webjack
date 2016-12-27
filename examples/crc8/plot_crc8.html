@@ -3,7 +3,7 @@
 <head>
   <meta content="text/html;charset=UTF-8" http-equiv="Content-Type"/>
   <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-  <title>WebJack</title>
+  <title>WebJack CRC8 Plotting Demo</title>
 
   <script src="../jquery.min.js"></script>
   <script src="../adapter.js"></script>
@@ -12,11 +12,17 @@
   
   <script src="rickshaw/d3.v3.js"></script>
   <script src="rickshaw/rickshaw.js"></script>
+
+
+ <script src="crc8.js"></script>
+
   <link type="text/css" rel="stylesheet" href="rickshaw/graph.css">
   <link type="text/css" rel="stylesheet" href="rickshaw/detail.css">
   <link type="text/css" rel="stylesheet" href="rickshaw/legend.css">
   <link type="text/css" rel="stylesheet" href="rickshaw/extensions.css">
+
   <link type="text/css" rel="stylesheet" href="../examples.css" />
+
 
   <style>
     #chart_container {
@@ -45,23 +51,24 @@
 </head>
 <body>
   
-  <h1>WebJack Sensor Plotting Demo</h1>
+  <h1>WebJack CRC8 Plotting Demo</h1>
+
+<p>Using a common <a href="https://en.wikipedia.org/wiki/Cyclic_redundancy_check">Cyclic Redundancy Check</a> technique to detect errors in transmission and reject them. Requires use of the <a href="https://github.com/dwblair/arduino_crc8">crc8</a> library on the Arduino side.</p>
+
   <a href="https://github.com/publiclab/webjack">WebJack</a> is a JavaScript library that uses an audio modem to communicate with an Arduino µC via headphone jack. No need to install anything.
 
-  <p>Note: in order to have a value plotted on the graph, it must be a single, valid number -- like "32.5".  The graph is set to scale the y-axis automatically.</p>
+  <a href="https://github.com/publiclab/webjack">WebJack</a> is a JavaScript library that uses an audio modem to communicate with an Arduino µC via headphone jack. No need to install anything.
 
+<!---
   <p>
-    <form class="sendForm" style="display:inline;">
-      <input type="text" class="userinput">
-    </form>
-    <button class="send">Send</button>
-
+    Profile: 
     <select id="prof" onchange="changeProfile(this.value)">
       <option value="0">SoftModem</option>
       <option value="1">LowFrequencies</option>
       <option value="2">Browser</option>
     </select>
   </p>
+-->
 
   <div id="content">
     <div id="chart" class="rickshaw_graph"></div>
@@ -94,33 +101,50 @@
       connection = new WebJack.Connection(profile);
 
       connection.listen(function(data) {
+
+	// parse the input data into message + checksum
+        var str = data;
+        var res = str.split("%");
+        var msg = res[0];
+	var checksum_input= res[1];
+
         log.apend(data);
 
-        //graph the data
-        var value = parseFloat(data);
+	//log.apend(checksum_input);
 
-        if (isNaN(value)==false) {
-        var datum = {one: value};
 
-        $('#readout').text(value.toFixed(2));
+	 // convert msg into array of bytes and then calculate checksum from it
+  	var msg_byte_array = msg.split('').map(function(x){return x.charCodeAt(0)});
+	var crc8 = new CRC8();
+	var checksum = crc8.checksum(msg_byte_array);
 
-        graph.series.addData(datum);
-        graph.render();
-  }
+        console.log('checksum: ' + checksum);
+
+	if(checksum_input==checksum) {
+
+		//graph the data if it's a float
+		var value = parseFloat(msg);
+
+		if (isNaN(value)==false) {
+			var datum = {one: value};
+
+			$('#readout').text(value.toFixed(2));
+
+
+
+			graph.series.addData(datum);
+			graph.render();
+	  	}
+	}
   
-        console.log('Arduino to WebJack: ' + data);
+        //console.log('Arduino to WebJack: ' + data);
       });
 
-      function send(e) {
-        e.preventDefault();
+      $('.send').click(function () {
         var text = $('.userinput').val();
         connection.send(text);
         console.log('WebJack to Arduino: ' + text);
-        return false;
-      }
-
-      $('.send').click(send);
-      $('.sendForm').submit(send);
+      });
 
     });
 
@@ -167,7 +191,7 @@
       width: 700,
       height: 500,
       renderer: 'line',
-      max:45,
+      max:40,
       series: new Rickshaw.Series.FixedDuration([{ name: 'one' }], undefined, {
         timeInterval: 100,
         maxDataPoints: 100,

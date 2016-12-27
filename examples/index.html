@@ -19,14 +19,19 @@
 
   <p>Make sure the audio cable is connected and your Arduino is running one of the example sketches. <i>Eventually, crosstalk between signal lines will make sent data appear as received data</i>.</p>
 
-  <input type="text" class="userinput">
-  <button class="send">Send</button>
+  <p>
+    <form class="sendForm" style="display:inline;">
+      <input type="text" class="userinput">
+    </form>
+    <button class="send">Send</button>
 
-  <select id="prof" onchange="changeProfile(this.value)">
-    <option value="0">SoftModem</option>
-    <option value="1">LowFrequencies</option>
-    <option value="2">Browser</option>
-  </select>
+    <select id="prof" onchange="changeProfile(this.value)">
+      <option value="0">SoftModem</option>
+      <option value="1">LowFrequencies</option>
+      <option value="2">Browser</option>
+      <option value="3">Slow (36 baud)</option>
+    </select>
+  </p>
 
   <div class="webjack-log"></div>
 
@@ -51,7 +56,8 @@
         log.scrollTop(log[0].scrollHeight);
       }
 
-      var profile = WebJack.Profiles[getUrlParameter('profile')]; // https://github.com/publiclab/webjack/blob/master/src/profiles.js
+      var profileParam = getUrlParameter('profile') || "SoftModem";
+      var profile = WebJack.Profiles[profileParam]; // https://github.com/publiclab/webjack/blob/master/src/profiles.js
       console.log('loading profile: ', profile);
 
       connection = new WebJack.Connection(profile);
@@ -61,11 +67,16 @@
         console.log('Arduino to WebJack: ' + data);
       });
 
-      $('.send').click(function () {
+      function send(e) {
+        e.preventDefault();
         var text = $('.userinput').val();
         connection.send(text);
         console.log('WebJack to Arduino: ' + text);
-      });
+        return false;
+      }
+
+      $('.send').click(send);
+      $('.sendForm').submit(send);
 
     });
 
@@ -98,6 +109,15 @@
           break;
         case "2":
           profile = WebJack.Profiles.Browser;
+          break;
+        case "3": // "Slow"
+          profile = {
+            baud: 36,
+            freqLow : 4900,
+            freqHigh : 7350,
+            echoCancellation : false,
+            softmodem : true
+          };
           break;
       }
       connection.setProfile(profile);
