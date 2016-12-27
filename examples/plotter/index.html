@@ -51,7 +51,11 @@
   <p>Note: in order to have a value plotted on the graph, it must be a single, valid number -- like "32.5".  The graph is set to scale the y-axis automatically.</p>
 
   <p>
-    Profile: 
+    <form class="sendForm" style="display:inline;">
+      <input type="text" class="userinput">
+    </form>
+    <button class="send">Send</button>
+
     <select id="prof" onchange="changeProfile(this.value)">
       <option value="0">SoftModem</option>
       <option value="1">LowFrequencies</option>
@@ -107,11 +111,16 @@
         console.log('Arduino to WebJack: ' + data);
       });
 
-      $('.send').click(function () {
+      function send(e) {
+        e.preventDefault();
         var text = $('.userinput').val();
         connection.send(text);
         console.log('WebJack to Arduino: ' + text);
-      });
+        return false;
+      }
+
+      $('.send').click(send);
+      $('.sendForm').submit(send);
 
     });
 
