@@ -5,7 +5,7 @@ WebJack
 
 WebJack is a JavaScript library that uses [SoftModem](https://github.com/arms22/SoftModem), an Arduino library, to create two-way communication between a browser window and an Arduino. No need to install drivers. Just plug in an audio cable and read/send data from the browser.
 
-Try it out in this live demo: [https://webjack.io/examples/](https://webjack.io/examples/)
+Try it out in this live demo: [http://webjack.io/examples/](http://webjack.io/examples/)
 
 WebJack was built by @rmeister with input from @jywarren as part of [Public Lab](https://publiclab.org)'s 2016 [Google Summer of Code program](http://summerofcode.withgoogle.com), and you can read more about it at https://publiclab.org/tag/webjack.
 
@@ -61,9 +61,9 @@ Depending on the profile, WebJack uses different frequencies for the FSK modulat
 
 |  Profile                  | Parameters                     | Use Case | Demo |
 |---------------------------|--------------------------------|----------|------|
-| _SoftModem_ (default)     | 1225 bit/s, 4900 and 7350 Hz   | Communication with the SoftModem Arduino library | [Demo](https://publiclab.github.io/webjack/examples/) | 
-| _SoftModemLowFrequencies_ | 1225 bit/s, 2450 and 4900 Hz   | Reduced crosstalk for long cables | [Demo](https://publiclab.github.io/webjack/examples/?profile=SoftModemLowFrequencies) |
-| _Browser_                 | 1225 bit/s, 19600 and 20825 Hz | Browser-to-browser transmissions over the air | [Demo](https://publiclab.github.io/webjack/examples/?profile=Browser) |
+| _SoftModem_ (default)     | 1225 bit/s, 4900 and 7350 Hz   | Communication with the SoftModem Arduino library | [Demo](http://webjack.io/examples/) | 
+| _SoftModemLowFrequencies_ | 1225 bit/s, 2450 and 4900 Hz   | Reduced crosstalk for long cables | [Demo](http://webjack.io/examples/?profile=SoftModemLowFrequencies) |
+| _Browser_                 | 1225 bit/s, 19600 and 20825 Hz | Browser-to-browser transmissions over the air | [Demo](http://webjack.io/examples/?profile=Browser) |
 
 For the **_SoftModemLowFrequencies_** profile, echo cancellation is activated to reduce loopback produced by crosstalk between wires. Due to the echo cancellation some filters are applied that also reduce the upper frequency limit. Therefore you need to add this definitions to the head of your Arduino sketch, to configure SoftModem for lower frequencies:
 ```cpp
@@ -111,7 +111,7 @@ Set to `false` for transmissions between browser tabs to improve transmission re
 
 ## Plotting
 
-If you are receiving sensor data, you can plot a graph of incoming values [in the plotter example](https://publiclab.github.io/webjack/examples/plotter/).
+If you are receiving sensor data, you can plot a graph of incoming values [in the plotter example](http://webjack.io/examples/plotter/).
 Test it out even without a sensor, by playing audio from [this YouTube video of WebJack-transmitted sensor data](https://www.youtube.com/watch?v=GtJW1Dlt3cg) out loud into the microphone while viewing the above demo. 
 
 ![plotted data](https://i.publiclab.org/system/images/photos/000/018/056/medium/Screenshot_2016-09-16_at_11.43.26_AM.png)
