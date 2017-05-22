@@ -7,6 +7,8 @@ WebJack is a JavaScript library that uses [SoftModem](https://github.com/arms22/
 
 Try it out in this live demo: https://publiclab.github.io/webjack/examples/
 
+WebJack was built by @rmeister with input from @jywarren as part of [Public Lab](https://publiclab.org)'s 2016 [Google Summer of Code program](http://summerofcode.withgoogle.com), and you can read more about it at https://publiclab.org/tag/webjack.
+
 Also see [webjack-firmata](https://github.com/publiclab/webjack-firmata), which builds on `webjack` to provide a browser-based hardware interface for [firmata.js](https://github.com/firmata/firmata.js).
 
 
@@ -159,7 +161,7 @@ npm test
 ```
 
 
-##Developers
+## Developers
 
 Help improve Public Lab software!
 
