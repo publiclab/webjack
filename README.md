@@ -5,7 +5,7 @@ WebJack
 
 WebJack is a JavaScript library that uses [SoftModem](https://github.com/arms22/SoftModem), an Arduino library, to create two-way communication between a browser window and an Arduino. No need to install drivers. Just plug in an audio cable and read/send data from the browser.
 
-Try it out in this live demo: https://publiclab.github.io/webjack/examples/
+Try it out in this live demo: [https://webjack.io/examples/](https://webjack.io/examples/)
 
 WebJack was built by @rmeister with input from @jywarren as part of [Public Lab](https://publiclab.org)'s 2016 [Google Summer of Code program](http://summerofcode.withgoogle.com), and you can read more about it at https://publiclab.org/tag/webjack.
 
@@ -28,6 +28,7 @@ bower install -S webjack
 ```
 
 ## Requirements
+
 __Hardware__
 
 An Arduino Uno or any other ATmega328p based board is required. Future support for other controllers is discussed [here](https://github.com/arms22/SoftModem/issues/5). In addition, it is **_strongly recommended_** to build the circuit (or buy the shield) found at [SoftModem](https://github.com/arms22/SoftModem#hardware).
@@ -41,6 +42,7 @@ WebJack uses the [adapter.js](https://github.com/webrtc/adapter) shim for browse
 jQuery is only used for the demo site and _not_ required for WebJack.
 
 ## Usage
+
 ```js
 var profile = WebJack.Profiles.SoftModem;
 var connection = new WebJack.Connection(profile);
@@ -53,6 +55,7 @@ connection.send('some data');
 ```
 
 ### Profiles
+
 Depending on the profile, WebJack uses different frequencies for the FSK modulation.
 
 
@@ -73,6 +76,7 @@ The **_Browser_** profile is a planned feature and not working yet. Its purpose 
 
 
 ### Individual Profile Options
+
 You can change profile attributes individually.
 
 __profile.raw__
@@ -166,5 +170,5 @@ npm test
 Help improve Public Lab software!
 
 * Join the 'plots-dev@googlegroups.com' discussion list to get involved
-* Find lots of info on contributing at http://publiclab.org/wiki/developers
-* Review specific contributor guidelines at http://publiclab.org/wiki/contributing-to-public-lab-software
+* Find lots of info on contributing at [http://publiclab.org/wiki/developers](http://publiclab.org/wiki/developers)
+* Review specific contributor guidelines at [http://publiclab.org/wiki/contributing-to-public-lab-software](http://publiclab.org/wiki/contributing-to-public-lab-software)
