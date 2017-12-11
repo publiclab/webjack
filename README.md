@@ -7,7 +7,11 @@ WebJack
 
 Try it out in this live demo: [http://webjack.io/examples/](http://webjack.io/examples/)
 
-WebJack was built by @rmeister with input from @jywarren as part of [Public Lab](https://publiclab.org)'s 2016 [Google Summer of Code program](http://summerofcode.withgoogle.com), and you can read more about it at https://publiclab.org/tag/webjack.
+WebJack was built by @rmeister with input from @jywarren as part of [Public Lab](https://publiclab.org)'s 2016 [Google Summer of Code program](http://summerofcode.withgoogle.com).
+
+**Ask questions and find more tutorials** at https://publiclab.org/wiki/webjack.
+
+****
 
 Also see [webjack-firmata](https://github.com/publiclab/webjack-firmata), which builds on `webjack` to provide a browser-based hardware interface for [firmata.js](https://github.com/firmata/firmata.js).
 
