@@ -7,6 +7,8 @@ WebJack
 
 Try it out in this live demo: [https://publiclab.github.io/webjack/examples/](https://publiclab.github.io/webjack/examples/)
 
+Or in this simple sketch in p5js: https://alpha.editor.p5js.org/jywarren/sketches/rkztwSt8M
+
 WebJack was built by @rmeister with input from @jywarren as part of [Public Lab](https://publiclab.org)'s 2016 [Google Summer of Code program](http://summerofcode.withgoogle.com).
 
 **Ask questions and find more tutorials** at [https://publiclab.org/webjack](https://publiclab.org/webjack).
