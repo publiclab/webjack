@@ -33,7 +33,7 @@
     "grunt-contrib-watch": "^1.0.0",
     "jquery": "^3.1.0",
     "matchdep": "^0.3.0",
-    "sinon": "^1.17.4",
+    "sinon": "^7.2.2",
     "tape": "^3.5.0",
     "wav-decoder": "^1.1.0",
     "webrtc-adapter": "^1.1.0"
