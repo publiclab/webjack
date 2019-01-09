@@ -7,4 +7,5 @@ node_js:
   - '8'
   - '9'
   - '10'
+pre_script: grunt build
 script: npm test
