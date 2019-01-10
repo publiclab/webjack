@@ -1,6 +1,8 @@
 language: node_js
 node_js:
   - '4'
-  - '5'
+  - '6'
+  - '8'
+  - '10'
 pre_script: grunt build
 script: npm test
