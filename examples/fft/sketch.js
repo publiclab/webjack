@@ -5,7 +5,7 @@
  * <a href="http://p5js.org/reference/#/libraries/p5.sound">p5.sound library</a>
  * and a running <a href="https://github.com/processing/p5.js/wiki/Local-server">local server</a>.</span></em></p>
  */
-var mic, fft, labelScale = 5;
+var mic, fft, labelScale = 3;
 
 function setup() {
   createCanvas(400, 100);
@@ -19,7 +19,7 @@ function setup() {
 }
 
 function draw() {
-  var scale = 2;
+  var scale = 1;
   background(200);
 
   text(parseInt(map(mouseX, 0, width, 20, 15000 / scale)) + " Hz", mouseX - 10, mouseY - 20);
