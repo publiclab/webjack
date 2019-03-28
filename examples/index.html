@@ -12,12 +12,20 @@
   
   <link href="examples.css" rel="stylesheet">
 
+  <!-- equalizer code -->
+    <script src="fft/p5.min.js"></script>
+    <script src="fft/p5.dom.min.js"></script>
+    <script src="fft/p5.sound.min.js"></script>
+  <!-- end equalizer code -->
+
 </head>
 <body>
   <h1>WebJack Demo</h1>
   <a href="https://github.com/publiclab/webjack">WebJack</a> is a JavaScript library that uses an audio modem to communicate with an Arduino µC via headphone jack. No need to install anything.
 
   <p>Make sure the audio cable is connected and your Arduino is running one of the example sketches. <i>Eventually, crosstalk between signal lines will make sent data appear as received data</i>. To test without an Arduino, use <a href="https://www.youtube.com/watch?v=GtJW1Dlt3cg">this YouTube video recording of sensor data</a></p>
+
+  <div style="float:right;margin-bottom:10px;" class="equalizer"><a href="#" onClick="setupEqualizer()" class="eq-btn">Click to test audio</a></div>
 
   <p>
     <form class="sendForm" style="display:inline;">
@@ -33,7 +41,7 @@
     </select>
   </p>
 
-  <div class="webjack-log"></div>
+  <div style="clear:both;" class="webjack-log"></div>
 
   <p class="hint"><i>WebJack is in an early development stage. If it does not work, try to:</i>
     <ul>
@@ -124,6 +132,7 @@
     }
 
   </script>
+  <script src="fft/sketch.js"></script>
 
 </body>
 </html>
