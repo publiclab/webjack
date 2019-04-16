@@ -13,9 +13,9 @@
   <link href="examples.css" rel="stylesheet">
 
   <!-- equalizer code -->
-    <script src="fft/p5.min.js"></script>
-    <script src="fft/p5.dom.min.js"></script>
-    <script src="fft/p5.sound.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.3/p5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.3/addons/p5.dom.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.3/addons/p5.sound.min.js"></script>
   <!-- end equalizer code -->
 
 </head>
@@ -25,7 +25,7 @@
 
   <p>Make sure the audio cable is connected and your Arduino is running one of the example sketches. <i>Eventually, crosstalk between signal lines will make sent data appear as received data</i>. To test without an Arduino, use <a href="https://www.youtube.com/watch?v=GtJW1Dlt3cg">this YouTube video recording of sensor data</a></p>
 
-  <div style="float:right;margin-bottom:10px;" class="equalizer"><a href="#" onClick="setupEqualizer()" class="eq-btn">Click to test audio</a></div>
+  <div style="float:right;margin-bottom:10px;" class="equalizer"></div>
 
   <p>
     <form class="sendForm" style="display:inline;">
@@ -41,6 +41,8 @@
     </select>
   </p>
 
+  <p><button class="btn-begin">Click to begin using WebJack</button></p>
+
   <div style="clear:both;" class="webjack-log"></div>
 
   <p class="hint"><i>WebJack is in an early development stage. If it does not work, try to:</i>
@@ -51,7 +53,6 @@
   </p>
 
   <script>
-
 
     var connection;
 
@@ -68,23 +69,47 @@
       var profile = WebJack.Profiles[profileParam]; // https://github.com/publiclab/webjack/blob/master/src/profiles.js
       console.log('loading profile: ', profile);
 
-      connection = new WebJack.Connection(profile);
+      $('.btn-begin').click(initWebjack);
 
-      connection.listen(function(data) {
-        log.apend(data);
-        console.log('Arduino to WebJack: ' + data);
-      });
+      // run this after a user interaction
+      // https://github.com/publiclab/webjack/issues/88
+      // https://goo.gl/7K7WLu
+      function initWebjack() {
 
-      function send(e) {
-        e.preventDefault();
-        var text = $('.userinput').val();
-        connection.send(text);
-        console.log('WebJack to Arduino: ' + text);
-        return false;
+        var scriptEl = document.createElement('script');
+        scriptEl.setAttribute('src','fft/p5.sound.min.js');
+        document.head.appendChild(scriptEl);
+
+        setupEqualizer();
+
+        function touchStarted() {
+          if (getAudioContext().state !== 'running') {
+            getAudioContext().resume();
+          }
+        }
+        
+        $('.btn-begin').hide()
+          .click(touchStarted);
+
+        connection = new WebJack.Connection(profile);
+
+        connection.listen(function(data) {
+          log.apend(data);
+          console.log('Arduino to WebJack: ' + data);
+        });
+
+        function send(e) {
+          e.preventDefault();
+          var text = $('.userinput').val();
+          connection.send(text);
+          console.log('WebJack to Arduino: ' + text);
+          return false;
+        }
+
+        $('.send').click(send);
+        $('.sendForm').submit(send);
+
       }
-
-      $('.send').click(send);
-      $('.sendForm').submit(send);
 
     });
 
