@@ -1,6 +1,6 @@
 {
   "name": "webjack",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "A library to connect to an Arduino microcontroller from a website via serial over the audio jack, using WebRTC.",
   "main": "dist/webjack.js",
   "scripts": {
