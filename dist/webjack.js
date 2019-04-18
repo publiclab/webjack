@@ -658,7 +658,8 @@ WebJack.Connection = Class.extend({
     }
 
     var args = ifUndef(args, WebJack.Profiles.SoftModem);
-    var audioCtx = typeof args.audioCtx === 'undefined' ? new AudioContext() : args.audioCtx;
+    var AudioContext = window.AudioContext || window.webkitAudioContext;
+    var audioCtx = ifUndef(args.audioCtx, new AudioContext());
 
     var opts = connection.options = {
       sampleRate       : audioCtx.sampleRate,
@@ -753,7 +754,8 @@ WebJack.Connection = Class.extend({
 
       var samples = encoder.modulate(data);
       var dataBuffer = audioCtx.createBuffer(1, samples.length, opts.sampleRate);
-      dataBuffer.copyToChannel(samples, 0);
+      dataBuffer.getChannelData(0).set(samples);
+
 
       if (locked)
         queue.push(dataBuffer);
