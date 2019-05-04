@@ -132,7 +132,7 @@ WebJack.Connection = Class.extend({
 
     // Returns valid JSON object if possible, 
     // or <false> if not.
-    connection.validateJSON = function(data) {
+    connection.validateJSON = function validateJSON(data) {
       var object; 
       try {
         object = JSON.parse(data);
@@ -143,10 +143,21 @@ WebJack.Connection = Class.extend({
     }
 
     // Set the connection profile
-    connection.setProfile = function(profile) {
+    connection.setProfile = function setProfile(profile) {
       encoder.setProfile(profile);
       if (typeof decoder === 'object')
         decoder.setProfile(profile);
+    }
+
+    connection.setBaud = function setBaud(baud) {
+      connection.options.baud = baud;
+      connection.setProfile(connection.options);
+    }
+
+    connection.setFrequencies = function setFrequencies(high, low) {
+      connection.options.freqHigh = high;
+      connection.options.freqLow = low;
+      connection.setProfile(connection.options);
     }
 
   } 
