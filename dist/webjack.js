@@ -658,7 +658,11 @@ WebJack.Connection = Class.extend({
     }
 
     var args = ifUndef(args, WebJack.Profiles.SoftModem);
-    var AudioContext = window.AudioContext || window.webkitAudioContext;
+
+    // or try (typeof AudioContext === 'undefined')
+    AudioContext = AudioContext || webkitAudioContext;
+    var audioCtx = typeof args.audioCtx === 'undefined' ? new AudioContext() : args.audioCtx;
+
     var audioCtx = ifUndef(args.audioCtx, new AudioContext());
 
     var opts = connection.options = {
