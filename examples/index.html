@@ -52,6 +52,11 @@
     </ul>
   </p>
 
+  <p>
+    <button class="btn-baud">Change baud</button>
+    <button class="btn-freq">Change frequencies</button>
+  </p>
+
   <script>
 
     var connection;
@@ -155,6 +160,15 @@
       }
       connection.setProfile(profile);
     }
+
+    $('.btn-freq').click(function() {
+      var freqs = prompt('Enter low and high frequencies separated by a comma, like "1200,2400"').split(',');
+      if (freqs) connection.setBaud(freqs[0], freqs[1]);
+    });
+    $('.btn-baud').click(function() {
+      var baud = prompt('Enter a baud (speed) like 1225');
+      if (baud) connection.setBaud(baud);
+    });
 
   </script>
   <script src="fft/sketch.js"></script>
