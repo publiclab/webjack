@@ -19,7 +19,6 @@ WebJack.Connection = Class.extend({
     } else {
       var audioCtx = args.audioCtx;
     }
-    audioCtx = ifUndef(args.audioCtx, new AudioContext());
 
     var opts = connection.options = {
       sampleRate       : audioCtx.sampleRate,
