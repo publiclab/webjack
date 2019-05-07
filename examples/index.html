@@ -162,7 +162,7 @@
     }
 
     $('.btn-freq').click(function() {
-      var freqs = prompt('Enter low and high frequencies separated by a comma, like "1200,2400"',1200,2400).split(',');
+      var freqs = prompt('Enter low and high frequencies separated by a comma, like "1200,2400"',"1200,2400").split(',');
       if (freqs) connection.setFreqs(freqs[0], freqs[1]);
     });
     $('.btn-baud').click(function() {
