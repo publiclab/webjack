@@ -162,11 +162,11 @@
     }
 
     $('.btn-freq').click(function() {
-      var freqs = prompt('Enter low and high frequencies separated by a comma, like "1200,2400"').split(',');
-      if (freqs) connection.setBaud(freqs[0], freqs[1]);
+      var freqs = prompt('Enter low and high frequencies separated by a comma, like "1200,2400"',1200,2400).split(',');
+      if (freqs) connection.setFreqs(freqs[0], freqs[1]);
     });
     $('.btn-baud').click(function() {
-      var baud = prompt('Enter a baud (speed) like 1225');
+      var baud = prompt('Enter a baud (speed) that's a factor of 44100 and under 1225',441);
       if (baud) connection.setBaud(baud);
     });
 
