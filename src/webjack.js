@@ -13,14 +13,12 @@ WebJack.Connection = Class.extend({
 
     var args = ifUndef(args, WebJack.Profiles.SoftModem);
 
-    var audioCtx;
     if (typeof args.audioCtx === 'undefined') {
-      AudioContext = AudioContext || webkitAudioContext;
-      audioCtx = new AudioContext();
+      AudioContext = ifUndef(AudioContext, webkitAudioContext);
+      var audioCtx = new AudioContext();
     } else {
-      audioCtx = args.audioCtx;
+      var audioCtx = args.audioCtx;
     }
-    audioCtx = ifUndef(args.audioCtx, new AudioContext());
 
     var opts = connection.options = {
       sampleRate       : audioCtx.sampleRate,
