@@ -84,7 +84,7 @@ For the **_SoftModemLowFrequencies_** profile, echo cancellation is activated to
 ```
 __Note:__ _It is recommended to make the cable length as short as possible, before using the non-default profile._
 
-The **_Browser_** profile is a planned feature and not working yet. Its purpose is communication between browser tabs on the same or a different device.
+The **_Browser_** profile is a planned feature and not working yet. Its purpose is communication between browser tabs on the same or a different device(s).
 
 
 ### Individual Profile Options
