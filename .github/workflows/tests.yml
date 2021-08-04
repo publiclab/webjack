@@ -1,0 +1,17 @@
+name: test
+on: [pull_request]
+jobs:
+  tape:
+    runs-on: ubuntu-16.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup node
+      uses: actions/setup-node@v2
+      with:
+        node-version: '10'
+    - name: Install Dependencies
+      run: npm install
+    - name: "Build dist files"
+      run: grunt build
+    - name: "Tape tests"
+      run: npm test
