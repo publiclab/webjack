@@ -55,6 +55,7 @@
   <p>
     <button class="btn-baud">Change baud</button>
     <button class="btn-freq">Change frequencies</button>
+    <button class="btn-dl">Download</button>
   </p>
 
   <script>
@@ -168,6 +169,21 @@
     $('.btn-baud').click(function() {
       var baud = prompt('Enter a baud (speed) that is a factor of 44100 and under 1225',441);
       if (baud) connection.setBaud(baud);
+    });
+    $('.btn-dl').click(function() {
+      // unicode and data type header for download href
+      var csv = "data:text/csv;charset=utf-8," + connection.history.received.join('\n');
+      // encode received data for utf8
+      var encodedUri = encodeURI(csv);
+      
+      // hidden link created for HTML download attribute
+      var link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", new Date().toJSON().slice(0,10).replace(/-/g,'/')+'.csv');
+      document.body.appendChild(link); // Required for FF
+      link.click();
+      // removed hidden html link for cleanliness
+      document.body.removeChild(link);     
     });
 
   </script>
